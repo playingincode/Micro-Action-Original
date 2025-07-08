@@ -10,17 +10,21 @@ from .base import BaseRecognizer
 class Recognizer2D(BaseRecognizer):
     """2D recognizer model framework."""
 
-    def forward_train(self, imgs, labels,embs_la, **kwargs):
+    def forward_train(self, imgs, labels,embs_la,videomae_features, **kwargs):
         """Defines the computation performed at every call when training."""
-
+       
         assert self.with_cls_head
         batches = imgs.shape[0]
+        
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         num_segs = imgs.shape[0] // batches
-
+        # print("Images shape",imgs.shape)
+        # print("Videomae features",videomae_features.shape)
+        
         losses = dict()
-
-        x = self.extract_feat(imgs)
+       
+        x = self.extract_feat(imgs,videomae_features)
+        
 
         if self.backbone_from in ['torchvision', 'timm']:
             if len(x.shape) == 4 and (x.shape[2] > 1 or x.shape[3] > 1):
@@ -47,14 +51,14 @@ class Recognizer2D(BaseRecognizer):
 
         return losses
 
-    def _do_test(self, imgs,labels,embs_la):
+    def _do_test(self, imgs,labels,embs_la,videomae_features):
         """Defines the computation performed at every call when evaluation,
         testing and gradcam."""
         batches = imgs.shape[0]
         imgs = imgs.reshape((-1, ) + imgs.shape[2:])
         num_segs = imgs.shape[0] // batches
 
-        x = self.extract_feat(imgs)
+        x = self.extract_feat(imgs,videomae_features)
 
         if self.backbone_from in ['torchvision', 'timm']:
             if len(x.shape) == 4 and (x.shape[2] > 1 or x.shape[3] > 1):
@@ -137,7 +141,7 @@ class Recognizer2D(BaseRecognizer):
                                       cls_score.size()[0] // batches)
         return cls_score
 
-    def forward_test(self, imgs,labels,embs_la):
+    def forward_test(self, imgs,labels,embs_la,videomae_features):
         """Defines the computation performed at every call when evaluation and
         testing."""
         if self.test_cfg.get('fcn_test', False):
@@ -145,7 +149,7 @@ class Recognizer2D(BaseRecognizer):
             assert not self.feature_extraction
             assert self.with_cls_head
             return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs,labels,embs_la).cpu().numpy()
+        return self._do_test(imgs,labels,embs_la,videomae_features).cpu().numpy()
 
     def forward_dummy(self, imgs, softmax=False):
         """Used for computing network FLOPs.

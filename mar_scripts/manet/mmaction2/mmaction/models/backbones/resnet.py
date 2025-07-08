@@ -7,8 +7,9 @@ from torch.utils import checkpoint as cp
 
 from ...utils import get_root_logger
 from ..builder import BACKBONES
-
-
+from .tridet_block import SGPBlock, Global_Relational_Block
+import torch
+import torch.nn.functional as F
 class BasicBlock(nn.Module):
     """Basic block for ResNet.
 
@@ -374,10 +375,21 @@ class ResNet(nn.Module):
         self.block, stage_blocks = self.arch_settings[depth]
         self.stage_blocks = stage_blocks[:num_stages]
         self.inplanes = 64
-
+        self.SGP_block=SGPBlock(1408,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
+        self.SGP_block2=SGPBlock(1408,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
+        self.SGP_block3=SGPBlock(1408,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
+        self.SGP_block4=SGPBlock(1408,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
+        # self.SGP_block_2 = SGPBlock(1408, 1, n_ds_stride=2, k=1.5, n_hidden=768, init_conv_vars=0)
+        self.Global_Relational_Block = Global_Relational_Block(1408, num_heads=4)
+        self.Global_Relational_Block2 = Global_Relational_Block(1408, num_heads=4)
+        self.Global_Relational_Block3 = Global_Relational_Block(1408, num_heads=4)
+        self.first_conv=nn.Conv2d(1408, 512, kernel_size=1)
+        self.second_conv=nn.Conv2d(1408, 2048, kernel_size=1)
+        self.reduce_conv= nn.Linear(2048, 1408)
         self._make_stem_layer()
 
         self.res_layers = []
+        # print("Stage blocks",self.num_stages)
         for i, num_blocks in enumerate(self.stage_blocks):
             stride = strides[i]
             dilation = dilations[i]
@@ -528,7 +540,7 @@ class ResNet(nn.Module):
         else:
             raise TypeError('pretrained must be a str or None')
 
-    def forward(self, x):
+    def forward(self, x,videomae_features):
         """Defines the computation performed at every call.
 
         Args:
@@ -538,12 +550,80 @@ class ResNet(nn.Module):
             torch.Tensor: The feature of the input samples extracted
             by the backbone.
         """
+        #Added code
+        # print("Video mae features",videomae_features.shape)
+        
+        batches = videomae_features.shape[0]
+        # print("Images shape",videomae_features.shape)
+        videomae_features=videomae_features.squeeze(2)
+        # original_input=imgs
+        # print("Original input",original_input.shape)
+        imgs=videomae_features.permute(0,2,1)
+        # print("After Permute and squeeze shape",imgs.shape)
+
+        mask_bool = torch.ones((batches, 8), dtype=torch.bool)
+        mask_bool = mask_bool.unsqueeze(1).cuda()
+        
+ 
+        #Module 1
+        p=self.Global_Relational_Block(imgs.permute(0,2,1))
+        # print("P shape",p.shape)
+        imgs = imgs + p.permute(0,2,1)
+        y,_=self.SGP_block(imgs,mask_bool)
+        imgs = imgs + y
+    
+        # print("Images shape",imgs.shape)
+        
+        video_mae_feats = imgs.permute(0, 2, 1)  # [B, T, D]
+        video_mae_feats = video_mae_feats.reshape(-1, 1408)  # [B*T, D]
+        video_mae_feats = video_mae_feats.unsqueeze(-1).unsqueeze(-1) 
+        
+        video_proj1 = self.first_conv(video_mae_feats)  # [80, 2048, 1, 1]
+        
+# Upsample VideoMAE to CNN spatial size
+        video_proj_upsampled1 = F.interpolate(video_proj1, size=(28, 28), mode='nearest')
+        # print("Video proj shape",video_proj_upsampled1.shape)
+        #Exisiting code
         x = self.conv1(x)
         x = self.maxpool(x)
         outs = []
+        # print("Resnet layers",self.res_layers)
+        # exit()
         for i, layer_name in enumerate(self.res_layers):
+            # print("I",i)
             res_layer = getattr(self, layer_name)
-            x = res_layer(x)
+            if i==2:
+                x = res_layer(x+video_proj_upsampled1)
+            elif i==3:
+                x=res_layer(x)#(B,2408,7,7)
+                y=F.adaptive_avg_pool2d(x, 1) #(B*T,2048,1,1)
+                y = y.view(y.size(0), -1)  #(B*T,2048)
+                y= self.reduce_conv(y)#(B*T,1408)
+               
+                y = y.view(y.size(0), 1408)  #(B*T,1408)
+                # print("Y shape",y.shape)
+                y = y.view(batches, 1408, 8) #(B,C,T)
+                
+                y=y+imgs
+                
+                 #Module 1
+                p=self.Global_Relational_Block2(y.permute(0,2,1))
+                # print("P shape",p.shape)
+                y = y + p.permute(0,2,1)
+                z,_=self.SGP_block2(y,mask_bool)
+                y = y + z
+                
+                y = y.reshape(-1, 1408)  # [B*T, D]
+                y = y.unsqueeze(-1).unsqueeze(-1) 
+                y=self.second_conv(y)
+                video_proj_upsampled2 = F.interpolate(y, size=(7, 7), mode='nearest')
+                x=x+video_proj_upsampled2
+                # print("Images shape",y.shape)
+              
+                
+            else:
+                x=res_layer(x)
+            # print("X shape",x.shape)
             if i in self.out_indices:
                 outs.append(x)
         if len(outs) == 1:

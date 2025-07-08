@@ -219,6 +219,11 @@ def main():
         datasets = [build_dataset(dataset) for dataset in cfg.data.train]
     else:
         datasets = [build_dataset(cfg.data.train)]
+    # sample = datasets[0][0]  # <-- first dataset's first sample
+    # for key, value in sample.items():
+    #     print(key, value)
+    # else:
+    #     print("Not a dict. Type:", type(sample))
 
     if len(cfg.workflow) == 2:
         # For simplicity, omnisource is not compatible with val workflow,

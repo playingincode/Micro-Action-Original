@@ -147,7 +147,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
             self.neck.init_weights()
 
     @auto_fp16()
-    def extract_feat(self, imgs):
+    def extract_feat(self, imgs,videomae_features):
         """Extract features through a backbone.
 
         Args:
@@ -167,7 +167,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                 assert len(x) == 1
                 x = x[0]
         else:
-            x = self.backbone(imgs)
+            x = self.backbone(imgs,videomae_features)
         return x
 
     def average_clip(self, cls_score, num_segs=1):
@@ -256,7 +256,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
 
         return loss, log_vars
 
-    def forward(self, imgs, label,emb, return_loss=True, **kwargs):
+    def forward(self, imgs, label,emb,videomae_features, return_loss=True, **kwargs):
         """Define the computation performed at every call."""
         if kwargs.get('gradcam', False):
             del kwargs['gradcam']
@@ -266,9 +266,9 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                 raise ValueError('Label should not be None.')
             if self.blending is not None:
                 imgs, label = self.blending(imgs, label)
-            return self.forward_train(imgs, label,emb, **kwargs)
+            return self.forward_train(imgs, label,emb,videomae_features, **kwargs)
 
-        return self.forward_test(imgs,label,emb, **kwargs)
+        return self.forward_test(imgs,label,emb, videomae_features,**kwargs)
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.
@@ -305,13 +305,16 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         imgs = data_batch['imgs']
         label = data_batch['label']
         emb=data_batch['emb']
+        videomae_features=data_batch['videomae_features']
+        
+        
 
         aux_info = {}
         for item in self.aux_info:
             assert item in data_batch
             aux_info[item] = data_batch[item]
 
-        losses = self(imgs, label, emb,return_loss=True, **aux_info)
+        losses = self(imgs, label, emb,videomae_features,return_loss=True, **aux_info)
 
         loss, log_vars = self._parse_losses(losses)
 
@@ -332,12 +335,13 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         imgs = data_batch['imgs']
         label = data_batch['label']
         emb=data_batch['emb']
+        videomae_features=data_batch['videomae_features']
 
         aux_info = {}
         for item in self.aux_info:
             aux_info[item] = data_batch[item]
 
-        losses = self(imgs, label,emb, return_loss=True, **aux_info)
+        losses = self(imgs, label,emb, videomae_features,return_loss=True, **aux_info)
 
         loss, log_vars = self._parse_losses(losses)
 
