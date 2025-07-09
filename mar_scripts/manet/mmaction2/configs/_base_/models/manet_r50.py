@@ -9,8 +9,8 @@ model = dict(
         shift_div=8),
     cls_head=dict(
         type='MANetHead',
-        num_classes=6,
-        in_channels=2048,
+        num_classes=4,
+        in_channels=512,
         spatial_type='avg',
         consensus=dict(type='AvgConsensus', dim=1),
         dropout_ratio=0.5,

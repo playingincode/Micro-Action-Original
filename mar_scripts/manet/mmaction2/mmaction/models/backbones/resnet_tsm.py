@@ -203,8 +203,9 @@ class ResNetTSM(ResNet):
 
         elif 'blockres' in self.shift_place:
             n_round = 1
-            if len(list(self.layer3.children())) >= 23:
-                n_round = 2
+            if hasattr(self, 'layer3'):
+                if len(list(self.layer3.children())) >= 23:
+                    n_round = 2
 
             def make_block_temporal(stage, num_segments):
                 """Make temporal shift on some blocks.
@@ -227,8 +228,9 @@ class ResNetTSM(ResNet):
 
             self.layer1 = make_block_temporal(self.layer1, num_segment_list[0])
             self.layer2 = make_block_temporal(self.layer2, num_segment_list[1])
-            self.layer3 = make_block_temporal(self.layer3, num_segment_list[2])
-            self.layer4 = make_block_temporal(self.layer4, num_segment_list[3])
+            if hasattr(self, 'layer3'):
+                self.layer3 = make_block_temporal(self.layer3, num_segment_list[2])
+                self.layer4 = make_block_temporal(self.layer4, num_segment_list[3])
 
         else:
             raise NotImplementedError

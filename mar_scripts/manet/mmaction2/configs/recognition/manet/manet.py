@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_normal_six_classes/'
+work_dir = './work_dirs/manet_leg_hand_two_stages/'

@@ -337,9 +337,9 @@ class ResNet(nn.Module):
                  torchvision_pretrain=True,
                  in_channels=3,
                  num_stages=4,
-                 out_indices=(3, ),
-                 strides=(1, 2, 2, 2),
-                 dilations=(1, 1, 1, 1),
+                 out_indices=(1, ),
+                 strides=(1, 2),
+                 dilations=(1, 1),
                  style='pytorch',
                  frozen_stages=-1,
                  conv_cfg=dict(type='Conv'),
@@ -355,8 +355,10 @@ class ResNet(nn.Module):
         self.in_channels = in_channels
         self.pretrained = pretrained
         self.torchvision_pretrain = torchvision_pretrain
+        num_stages=2
         self.num_stages = num_stages
         assert 1 <= num_stages <= 4
+        print("Out indices",out_indices)
         self.out_indices = out_indices
         assert max(out_indices) < num_stages
         self.strides = strides
@@ -541,9 +543,11 @@ class ResNet(nn.Module):
         x = self.conv1(x)
         x = self.maxpool(x)
         outs = []
+        # print("Res layers",self.res_layers)
         for i, layer_name in enumerate(self.res_layers):
             res_layer = getattr(self, layer_name)
             x = res_layer(x)
+            # print("I",i,"X",x.shape)
             if i in self.out_indices:
                 outs.append(x)
         if len(outs) == 1:
@@ -559,7 +563,7 @@ class ResNet(nn.Module):
             for m in self.conv1.modules():
                 for param in m.parameters():
                     param.requires_grad = False
-
+        # print("Frozen stages",self.frozen_stages)
         for i in range(1, self.frozen_stages + 1):
             m = getattr(self, f'layer{i}')
             m.eval()
