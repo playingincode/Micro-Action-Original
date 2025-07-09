@@ -545,6 +545,7 @@ class ResNet(nn.Module):
             res_layer = getattr(self, layer_name)
             x = res_layer(x)
             if i in self.out_indices:
+                # print("In test",i)
                 outs.append(x)
         if len(outs) == 1:
             return outs[0]
