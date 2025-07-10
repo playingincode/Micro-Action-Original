@@ -11,6 +11,7 @@ HEADS = MODELS
 RECOGNIZERS = MODELS
 LOSSES = MODELS
 LOCALIZERS = MODELS
+MULTIMODAL=MODELS
 
 try:
     from mmdet.models.builder import DETECTORS, build_detector
@@ -23,7 +24,9 @@ except (ImportError, ModuleNotFoundError):
             'Failed to import `DETECTORS`, `build_detector` from '
             '`mmdet.models.builder`. You will be unable to register or build '
             'a spatio-temporal detection model. ')
-
+        
+def build_multimodal(cfg):
+    return MULTIMODAL.build(cfg)
 
 def build_backbone(cfg):
     """Build backbone."""
@@ -49,6 +52,7 @@ def build_recognizer(cfg, train_cfg=None, test_cfg=None):
     assert cfg.get(
         'test_cfg'
     ) is None or test_cfg is None, 'test_cfg specified in both outer field and model field '  # noqa: E501
+
     return RECOGNIZERS.build(
         cfg, default_args=dict(train_cfg=train_cfg, test_cfg=test_cfg))
 
@@ -60,6 +64,7 @@ def build_loss(cfg):
 
 def build_localizer(cfg):
     """Build localizer."""
+    print(cfg)
     return LOCALIZERS.build(cfg)
 
 
@@ -79,6 +84,8 @@ def build_model(cfg, train_cfg=None, test_cfg=None):
                 'PR: https://github.com/open-mmlab/mmaction2/pull/629',
                 UserWarning)
         return build_detector(cfg, train_cfg, test_cfg)
+    if obj_type in MULTIMODAL:
+        return build_multimodal(cfg)
     model_in_mmdet = ['FastRCNN']
     if obj_type in model_in_mmdet:
         raise ImportError(
@@ -87,6 +94,8 @@ def build_model(cfg, train_cfg=None, test_cfg=None):
                      'LOCALIZERS, RECOGNIZERS or DETECTORS')
 
 
+
 def build_neck(cfg):
     """Build neck."""
+
     return NECKS.build(cfg)

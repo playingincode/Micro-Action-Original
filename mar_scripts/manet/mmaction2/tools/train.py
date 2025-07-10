@@ -20,10 +20,15 @@ from mmaction.datasets import build_dataset
 from mmaction.models import build_model
 from mmaction.utils import (collect_env, get_root_logger,
                             register_module_hooks, setup_multi_processes)
-
+from mmcv.runner import get_dist_info, init_dist, load_checkpoint
 import random
 import numpy as np
 import torch
+
+# import sys
+# sys.path.append("/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/")
+# from mmaction3.models import build_model as build_model_ours
+
 def parse_args():
     parser = argparse.ArgumentParser(description='Train a recognizer')
     parser.add_argument('config', help='train config file path')
@@ -205,10 +210,51 @@ def main():
     meta['config_name'] = osp.basename(args.config)
     meta['work_dir'] = osp.basename(cfg.work_dir.rstrip('/\\'))
 
+    # model = build_model(
+    #     cfg.model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    
     model = build_model(
-        cfg.model,
-        train_cfg=cfg.get('train_cfg'),
-        test_cfg=cfg.get('test_cfg'))
+        cfg.model)
+    
+    # body_head_model = build_model(
+    #     cfg.body_head_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    
+    # upper_limb_model = build_model(
+    #     cfg.upper_limb_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    
+    # lower_limb_model = build_model(
+    #     cfg.lower_limb_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    # body_hand_model = build_model(
+    #     cfg.body_hand_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    
+    # head_hand_model = build_model(
+    #     cfg.head_hand_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    
+    # leg_hand_model = build_model(
+    #     cfg.leg_hand_model,
+    #     train_cfg=cfg.get('train_cfg'),
+    #     test_cfg=cfg.get('test_cfg'))
+    # load_checkpoint(model, cfg.checkpoint_six_classes, map_location='cpu')
+    # load_checkpoint(body_head_model, cfg.body_head_ckpt, map_location='cpu')
+    # load_checkpoint(upper_limb_model, cfg.upper_limb_ckpt, map_location='cpu')
+    # load_checkpoint(lower_limb_model, cfg.lower_limb_ckpt, map_location='cpu')
+    # load_checkpoint(body_hand_model, cfg.body_hand_ckpt, map_location='cpu')
+    # load_checkpoint(head_hand_model, cfg.head_hand_ckpt, map_location='cpu')
+    # load_checkpoint(leg_hand_model, cfg.leg_hand_ckpt, map_location='cpu')
+    
+    
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
@@ -238,6 +284,7 @@ def main():
             config=cfg.pretty_text)
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
+    
     train_model(
         model,
         datasets,
