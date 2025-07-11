@@ -99,6 +99,59 @@ class Recognizer2D(BaseRecognizer):
         cls_score = self.average_clip(cls_score,
                                       cls_score.size()[0] // batches)
         return cls_score
+    
+    def _do_train_logits_and_emb_scores(self, imgs,labels,embs_la,videomae_features):
+        """Defines the computation performed at every call when evaluation,
+        testing and gradcam."""
+        batches = imgs.shape[0]
+        imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+        num_segs = imgs.shape[0] // batches
+
+        x = self.extract_feat(imgs)
+
+        if self.backbone_from in ['torchvision', 'timm']:
+            if len(x.shape) == 4 and (x.shape[2] > 1 or x.shape[3] > 1):
+                # apply adaptive avg pooling
+                x = nn.AdaptiveAvgPool2d(1)(x)
+            x = x.reshape((x.shape[0], -1))
+            x = x.reshape(x.shape + (1, 1))
+
+        if self.with_neck:
+            x = [
+                each.reshape((-1, num_segs) +
+                             each.shape[1:]).transpose(1, 2).contiguous()
+                for each in x
+            ]
+            x, _ = self.neck(x)
+            x = x.squeeze(2)
+            num_segs = 1
+
+        if self.feature_extraction:
+            # perform spatial pooling
+            avg_pool = nn.AdaptiveAvgPool2d(1)
+            x = avg_pool(x)
+            # squeeze dimensions
+            x = x.reshape((batches, num_segs, -1))
+            # temporal average pooling
+            x = x.mean(axis=1)
+            return x
+
+        # When using `TSNHead` or `TPNHead`, shape is [batch_size, num_classes]
+        # When using `TSMHead`, shape is [batch_size * num_crops, num_classes]
+        # `num_crops` is calculated by:
+        #   1) `twice_sample` in `SampleFrames`
+        #   2) `num_sample_positions` in `DenseSampleFrames`
+        #   3) `ThreeCrop/TenCrop` in `test_pipeline`
+        #   4) `num_clips` in `SampleFrames` or its subclass if `clip_len != 1`
+
+        # should have cls_head if not extracting features
+        cls_score,emb_score = self.cls_head(x, num_segs)#8,59
+
+        assert cls_score.size()[0] % batches == 0
+        # calculate num_crops automatically
+        cls_score = self.average_clip(cls_score,
+                                      cls_score.size()[0] // batches)
+        return cls_score,emb_score
 
     def _do_fcn_test(self, imgs):
         # [N, num_crops * num_segs, C, H, W] ->
@@ -136,6 +189,7 @@ class Recognizer2D(BaseRecognizer):
         cls_score = self.average_clip(cls_score,
                                       cls_score.size()[0] // batches)
         return cls_score
+    
 
     def forward_train_with_logits(self, imgs,labels,embs_la,videomae_features):
         """Defines the computation performed at every call when evaluation and
@@ -145,7 +199,7 @@ class Recognizer2D(BaseRecognizer):
         #     assert not self.feature_extraction
         #     assert self.with_cls_head
         #     return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs,labels,embs_la,videomae_features)
+        return self._do_train_logits_and_emb_scores(imgs,labels,embs_la,videomae_features)
     def forward_test(self, imgs,labels,embs_la,videomae_features):
         """Defines the computation performed at every call when evaluation and
         testing."""
@@ -154,7 +208,7 @@ class Recognizer2D(BaseRecognizer):
             assert not self.feature_extraction
             assert self.with_cls_head
             return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs,labels,embs_la,videomae_features).cpu().numpy()
+        return self._do_test(imgs,labels,embs_la,videomae_features)
 
     def forward_dummy(self, imgs, softmax=False):
         """Used for computing network FLOPs.
@@ -362,8 +416,92 @@ class Recognizer2D_ours(BaseRecognizer_ours):
         # calculate num_crops automatically
         cls_score = self.average_clip(cls_score,
                                       cls_score.size()[0] // batches)
-
+        # print(cls_score)
         return cls_score
+    
+
+    def _do_train_logits_and_emb_scores(self, imgs,labels,embs_la,videomae_features):
+        """Defines the computation performed at every call when evaluation,
+        testing and gradcam."""
+        batches = videomae_features.shape[0]
+        imgs=videomae_features.squeeze(2)
+        imgs=imgs.permute(0,2,1)
+        mask_bool = torch.ones((batches, 10), dtype=torch.bool)
+        mask_bool = mask_bool.unsqueeze(1).cuda()
+        # print("Images shape",imgs.shape)
+        # print("Mask book",mask_bool.shape)
+        # imgs_1, _ = self.SGP_block(imgs, mask_bool)
+
+        # imgs_2, _ = self.SGP_block_2(imgs, mask_bool)
+        p=self.Global_Relational_Block(imgs.permute(0,2,1))
+        # print("P shape",p.shape)
+        imgs = imgs + p.permute(0,2,1)
+        y,_=self.SGP_block(imgs,mask_bool)
+        imgs = imgs + y
+        imgs = imgs.permute(0, 2, 1)
+        # print(imgs_1.shape, imgs_2.shape)
+
+        # imgs_1 = imgs_1.permute(2, 0, 1)  # [T1, B, C] - query
+        # imgs_2 = imgs_2.permute(2, 0, 1)  # [T2, B, C] - key & value
+
+        # attn_output, _ = self.attn(query=imgs_1, key=imgs_2, value=imgs_2)
+        # imgs = attn_output.permute(0, 2, 1)
+        # imgs = imgs.permute(0, 2, 1)
+        imgs = imgs.reshape((-1, ) + imgs.shape[2:])
+        num_segs = imgs.shape[0] // batches
+
+        # x = self.extract_feat(imgs)
+        x=imgs
+
+        if self.backbone_from in ['torchvision', 'timm']:
+            if len(x.shape) == 4 and (x.shape[2] > 1 or x.shape[3] > 1):
+                # apply adaptive avg pooling
+                x = nn.AdaptiveAvgPool2d(1)(x)
+            x = x.reshape((x.shape[0], -1))
+            x = x.reshape(x.shape + (1, 1))
+
+
+        if self.with_neck:
+            print(self.with_neck)
+            x = [
+                each.reshape((-1, num_segs) +
+                             each.shape[1:]).transpose(1, 2).contiguous()
+                for each in x
+            ]
+            x, _ = self.neck(x)
+            x = x.squeeze(2)
+            num_segs = 1
+
+        # if self.feature_extraction:
+        #     # perform spatial pooling
+        #     avg_pool = nn.AdaptiveAvgPool2d(1)
+        #     x = avg_pool(x)
+        #     # squeeze dimensions
+        #     x = x.reshape((batches, num_segs, -1))
+        #     # temporal average pooling
+        #     x = x.mean(axis=1)
+        #     return x
+
+        # When using `TSNHead` or `TPNHead`, shape is [batch_size, num_classes]
+        # When using `TSMHead`, shape is [batch_size * num_crops, num_classes]
+        # `num_crops` is calculated by:
+        #   1) `twice_sample` in `SampleFrames`
+        #   2) `num_sample_positions` in `DenseSampleFrames`
+        #   3) `ThreeCrop/TenCrop` in `test_pipeline`
+        #   4) `num_clips` in `SampleFrames` or its subclass if `clip_len != 1`
+
+        # should have cls_head if not extracting features
+        # x = x.squeeze(1)
+        cls_score,emb_score = self.cls_head(x, num_segs)#8,59
+
+        assert cls_score.size()[0] % batches == 0
+        # calculate num_crops automatically
+        cls_score = self.average_clip(cls_score,
+                                      cls_score.size()[0] // batches)
+
+        return cls_score,emb_score
+    
+    
 
     def _do_fcn_test(self, imgs):
         # [N, num_crops * num_segs, C, H, W] ->
@@ -410,7 +548,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
             assert not self.feature_extraction
             assert self.with_cls_head
             return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs,labels,embs_la,videomae_features).cpu().numpy()
+        return self._do_test(imgs,labels,embs_la,videomae_features)
     
     
     def forward_train_with_logits(self, imgs,labels,embs_la,videomae_features):
@@ -421,7 +559,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
         #     assert not self.feature_extraction
         #     assert self.with_cls_head
         #     return self._do_fcn_test(imgs).cpu().numpy()
-        return self._do_test(imgs,labels,embs_la,videomae_features)
+        return self._do_train_logits_and_emb_scores(imgs,labels,embs_la,videomae_features)
 
     def forward_dummy(self, imgs, softmax=False):
         """Used for computing network FLOPs.

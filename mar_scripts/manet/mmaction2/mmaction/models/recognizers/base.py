@@ -268,6 +268,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         if kwargs.get('gradcam', False):
             del kwargs['gradcam']
             return self.forward_gradcam(imgs, **kwargs)
+        # print("Return loss inside forward of recognizer2d",return_loss)
         if return_loss:
             return self.forward_train_with_logits(imgs, label,emb,videomae_features, **kwargs)
             if label is None:
@@ -275,7 +276,7 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
             if self.blending is not None:
                 imgs, label = self.blending(imgs, label)
             
-
+        # print("Return loss inside forward of recognizer2d",return_loss)
         return self.forward_test(imgs,label,emb, videomae_features,**kwargs)
 
     def train_step(self, data_batch, optimizer, **kwargs):
@@ -628,6 +629,7 @@ class BaseRecognizer_ours(nn.Module, metaclass=ABCMeta):
         if kwargs.get('gradcam', False):
             del kwargs['gradcam']
             return self.forward_gradcam(imgs, **kwargs)
+        
         if return_loss:
             return self.forward_train_with_logits(imgs, label,emb,videomae_features, **kwargs)
             if label is None:
@@ -635,7 +637,7 @@ class BaseRecognizer_ours(nn.Module, metaclass=ABCMeta):
             if self.blending is not None:
                 imgs, label = self.blending(imgs, label)
             return self.forward_train(imgs, label,emb,videomae_features, **kwargs)
-
+        # print("Return loss inside forward of recognizer2d",return_loss)
         return self.forward_test(imgs,label,emb, videomae_features,**kwargs)
 
     def train_step(self, data_batch, optimizer, **kwargs):
