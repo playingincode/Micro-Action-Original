@@ -150,7 +150,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
                 cfg.test_cfg.average_clips = args.average_clips
 
     # remove redundant pretrain steps for testing
-    turn_off_pretrained(cfg.model)
+    # turn_off_pretrained(cfg.model)
 
     # build the model and load checkpoint
     model = build_model(
@@ -162,7 +162,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    load_checkpoint(model, args.checkpoint, map_location='cpu')
+    # load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)

@@ -9,6 +9,60 @@ from ...core import top_k_accuracy
 from collections import OrderedDict
 import torch.distributed as dist
 
+class CrossAttention(nn.Module):
+    def __init__(self, d_model=52, d_k=32):
+        super().__init__()
+        self.d_k = d_k
+        self.query_proj = nn.Linear(6, d_k)
+        self.key_proj = nn.Linear(d_model, d_k)
+        self.value_proj = nn.Linear(d_model, d_model)
+
+    def forward(self, gate_weights, expert_outputs):
+        """
+        gate_weights: [B, 6] → queries
+        expert_outputs: [B, 6, 52] → keys and values
+        Returns: [B, 52]
+        """
+        Q = self.query_proj(gate_weights)       # [B, d_k]
+        K = self.key_proj(expert_outputs)       # [B, 6, d_k]
+        V = self.value_proj(expert_outputs)     # [B, 6, 52]
+
+        Q = Q.unsqueeze(1)                      # [B, 1, d_k]
+        attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)  # [B, 1, 6]
+        attn_weights = torch.softmax(attn_scores, dim=-1)                       # [B, 1, 6]
+        attended = torch.matmul(attn_weights, V)                                # [B, 1, 52]
+        return attended.squeeze(1)                                              
+    
+    
+
+class CrossAttentionWithTransformer(nn.Module):
+    def __init__(self, d_model=52, d_k=32, num_heads=4, num_layers=2):
+        super().__init__()
+        self.cross_attn = CrossAttention(d_model=d_model, d_k=d_k)
+
+        encoder_layer = nn.TransformerEncoderLayer(
+            d_model=d_model,
+            nhead=num_heads,
+            dim_feedforward=2 * d_model,
+            batch_first=True,
+            activation='gelu'
+        )
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+
+        self.classifier = nn.Linear(d_model, d_model)  # Output: [B, 52]
+
+    def forward(self, gate_weights, expert_outputs):
+        # Step 1: Cross-Attention fusion
+        x = self.cross_attn(gate_weights, expert_outputs)  # [B, 52]
+
+        # Step 2: Add sequence dimension and apply transformer
+        x = x.unsqueeze(1)  # [B, 1, 52]
+        x = self.transformer(x)  # [B, 1, 52]
+
+        # Step 3: Remove sequence dim and apply final classifier
+        logits = self.classifier(x.squeeze(1))  # [B, 52]
+        return logits
+    
 @MULTIMODAL.register_module()
 class MultiBranchModel(nn.Module):
     def __init__(self,
@@ -35,6 +89,7 @@ class MultiBranchModel(nn.Module):
         self.body_hand_model = build_model(body_hand_model)
         self.head_hand_model = build_model(head_hand_model)
         self.leg_hand_model = build_model(leg_hand_model)
+        # print("Main model pretrained",main_model.pretrained)
         load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu')
         load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
         load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
@@ -49,6 +104,15 @@ class MultiBranchModel(nn.Module):
         self.loss_emb = build_loss(loss_emb)
         self.multi_class = multi_class
         self.label_smooth_eps = label_smooth_eps
+        self.main_model_linear=nn.Linear(6,6)
+        self.body_head_model_linear=nn.Linear(11,11)
+        self.upper_limb_model_linear=nn.Linear(13,13)
+        self.lower_limb_model_linear=nn.Linear(8,8)
+        self.body_hand_model_linear=nn.Linear(6,6)
+        self.head_hand_model_linear=nn.Linear(10,10)
+        self.leg_hand_model_linear=nn.Linear(4,4)
+        self.cross_attention_with_transformer=CrossAttentionWithTransformer()
+        
         assert isinstance(topk, (int, tuple))
         if isinstance(topk, int):
             topk = (topk, )
@@ -63,19 +127,26 @@ class MultiBranchModel(nn.Module):
         # videomae_features=data_batch['videomae_features']
         
         out_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
         # print(out_main)
         out_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_head=self.body_head_model_linear(out_body_head)
         # print(out_body_head)
         out_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
         out_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
         # print(out_lower_limb)
         out_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         out_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand = self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
         # print("emb_score_main:", emb_score_main.shape)
@@ -105,6 +176,10 @@ class MultiBranchModel(nn.Module):
         gate_weights = torch.softmax(out_main, dim=1)
         device = out_main.device
         num_classes = 52
+        
+        # top_expert_indices = torch.argmax(gate_weights, dim=1)  # [B]
+        # hard_gate_weights = torch.zeros_like(gate_weights)      # [B, 6]
+        # hard_gate_weights[torch.arange(gate_weights.size(0)), top_expert_indices] = 1.0
         # print("Weights",weights)
         expert_class_indices = [
             list(range(0, 11)),    # Expert 0
@@ -123,11 +198,13 @@ class MultiBranchModel(nn.Module):
             self.expand_to_52(out_head_hand, expert_class_indices[4]),
             self.expand_to_52(out_leg_hand, expert_class_indices[5]),
         ]  # each is [B, 52], 6, D]
+        
         # weights = weights.unsqueeze(-1)
         expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
         # weights = weights.unsqueeze(-1)
-        weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
-        final_logits = weighted_expert_outputs.sum(dim=1)
+        # weighted_expert_outputs = expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -139,7 +216,7 @@ class MultiBranchModel(nn.Module):
         #     loss=loss,
         #     log_vars=log_vars,
         #     num_samples=len(next(iter(data_batch.values()))))
-
+        # print(final_logits)
         return final_logits
     
     def forward(self, imgs, label,emb,videomae_features, return_loss=True, **kwargs):
@@ -284,19 +361,32 @@ class MultiBranchModel(nn.Module):
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
         
+        imgs = data_batch['imgs']
+        label = data_batch['label']
+        emb=data_batch['emb']
+        videomae_features=data_batch['videomae_features']
+        
         out_main,emb_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        out_main=self.main_model_linear(out_main)
+        # print("Out main",out_main)
         # print(out_main)
         out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_head=self.body_head_model_linear(out_body_head)
         # print(out_body_head)
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
         out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
         # print(out_lower_limb)
         out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
-        out_leg_hand,emb_score_leg_hand = self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
         # print("emb_score_main:", emb_score_main.shape)
@@ -345,22 +435,45 @@ class MultiBranchModel(nn.Module):
             self.expand_to_52(out_leg_hand, expert_class_indices[5]),
         ]  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
+        # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
+        # weights = weights.unsqueeze(-1)
+        # weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
         expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
         # weights = weights.unsqueeze(-1)
-        weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
-        final_logits = weighted_expert_outputs.sum(dim=1)
-        final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
-        loss=dict()
+        # weighted_expert_outputs = expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
+        print("Final logits",final_logits)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked)  # [B, 52]
+
+# 2. Predict class from logits
+        class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
+        predicted_class = class_probs.argmax(dim=1)       # [B]
+
+        # 3. Map predicted class to expert
+        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        for expert_id, indices in enumerate(expert_class_indices):
+            class_to_expert_map[indices] = expert_id
+        responsible_expert_idx = class_to_expert_map[predicted_class]  # [B]
+
+        # 4. Extract correct embedding score from `emb_scores`
+        batch_indices = torch.arange(predicted_class.shape[0], device=predicted_class.device)
+        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+
+        # Loss
+        loss = dict()
         gt_labels = label.squeeze()
-        loss_cls = self.loss(final_logits, final_emb_score,gt_labels,emb, **kwargs)
+
+        # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb, **kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
-        
+
         outputs = dict(
             loss=loss,
             log_vars=log_vars,
-            num_samples=len(next(iter(data_batch.values()))))
-
+            num_samples=len(label)  # safer than data_batch
+        )
         return outputs
         # loss
         
@@ -413,24 +526,38 @@ class MultiBranchModel(nn.Module):
         during val epochs. Note that the evaluation after training epochs is
         not implemented with this method, but an evaluation hook.
         # """
+        
+        imgs = data_batch['imgs']
+        label = data_batch['label']
+        emb=data_batch['emb']
+        videomae_features=data_batch['videomae_features']
+        
         imgs = data_batch['imgs']
         label = data_batch['label']
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
         
         out_main,emb_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        out_main=self.main_model_linear(out_main)
+        # print("Out main",out_main)
         # print(out_main)
         out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_head=self.body_head_model_linear(out_body_head)
         # print(out_body_head)
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
         out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
         # print(out_lower_limb)
         out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
-        out_leg_hand,emb_score_leg_hand = self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
         # print("emb_score_main:", emb_score_main.shape)
@@ -479,20 +606,42 @@ class MultiBranchModel(nn.Module):
             self.expand_to_52(out_leg_hand, expert_class_indices[5]),
         ]  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
+        # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
+        # weights = weights.unsqueeze(-1)
+        # weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
         expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
         # weights = weights.unsqueeze(-1)
-        weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
-        final_logits = weighted_expert_outputs.sum(dim=1)
-        final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
+        # weighted_expert_outputs = expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked)  # [B, 52]
+
+# 2. Predict class from logits
+        class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
+        predicted_class = class_probs.argmax(dim=1)       # [B]
+
+        # 3. Map predicted class to expert
+        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        for expert_id, indices in enumerate(expert_class_indices):
+            class_to_expert_map[indices] = expert_id
+        responsible_expert_idx = class_to_expert_map[predicted_class]  # [B]
+
+        # 4. Extract correct embedding score from `emb_scores`
+        batch_indices = torch.arange(predicted_class.shape[0], device=predicted_class.device)
+        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+
+        # Loss
+        loss = dict()
         gt_labels = label.squeeze()
-        loss=dict()
-        loss_cls = self.loss(final_logits, final_emb_score,gt_labels,emb, **kwargs)
+
+        # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb, **kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
-        
+
         outputs = dict(
             loss=loss,
             log_vars=log_vars,
-            num_samples=len(next(iter(data_batch.values()))))
-
+            num_samples=len(label)  # safer than data_batch
+        )
         return outputs

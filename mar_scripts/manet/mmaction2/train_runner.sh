@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p gpu='YES' and host='nefgpu46.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name manet_resnet_34_six_classes_average_embedding
+#OAR --name manet_mixture_of_experts_first_try
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
