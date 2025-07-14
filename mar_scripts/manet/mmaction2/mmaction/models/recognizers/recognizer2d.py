@@ -73,15 +73,15 @@ class Recognizer2D(BaseRecognizer):
             x = x.squeeze(2)
             num_segs = 1
 
-        if self.feature_extraction:
-            # perform spatial pooling
-            avg_pool = nn.AdaptiveAvgPool2d(1)
-            x = avg_pool(x)
-            # squeeze dimensions
-            x = x.reshape((batches, num_segs, -1))
-            # temporal average pooling
-            x = x.mean(axis=1)
-            return x
+        # if self.feature_extraction:
+        #     # perform spatial pooling
+        #     avg_pool = nn.AdaptiveAvgPool2d(1)
+        #     x = avg_pool(x)
+        #     # squeeze dimensions
+        #     x = x.reshape((batches, num_segs, -1))
+        #     # temporal average pooling
+        #     x = x.mean(axis=1)
+        #     return x
 
         # When using `TSNHead` or `TPNHead`, shape is [batch_size, num_classes]
         # When using `TSMHead`, shape is [batch_size * num_crops, num_classes]
@@ -93,11 +93,11 @@ class Recognizer2D(BaseRecognizer):
 
         # should have cls_head if not extracting features
         cls_score,_ = self.cls_head(x, num_segs)#8,59
-
+        # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
-        cls_score = self.average_clip(cls_score,
-                                      cls_score.size()[0] // batches)
+        # cls_score = self.average_clip(cls_score,
+        #                               cls_score.size()[0] // batches)
         return cls_score
     
     def _do_train_logits_and_emb_scores(self, imgs,labels,embs_la,videomae_features):
@@ -126,15 +126,15 @@ class Recognizer2D(BaseRecognizer):
             x = x.squeeze(2)
             num_segs = 1
 
-        if self.feature_extraction:
-            # perform spatial pooling
-            avg_pool = nn.AdaptiveAvgPool2d(1)
-            x = avg_pool(x)
-            # squeeze dimensions
-            x = x.reshape((batches, num_segs, -1))
-            # temporal average pooling
-            x = x.mean(axis=1)
-            return x
+        # if self.feature_extraction:
+        #     # perform spatial pooling
+        #     avg_pool = nn.AdaptiveAvgPool2d(1)
+        #     x = avg_pool(x)
+        #     # squeeze dimensions
+        #     x = x.reshape((batches, num_segs, -1))
+        #     # temporal average pooling
+        #     x = x.mean(axis=1)
+        #     return x
 
         # When using `TSNHead` or `TPNHead`, shape is [batch_size, num_classes]
         # When using `TSMHead`, shape is [batch_size * num_crops, num_classes]
@@ -146,11 +146,11 @@ class Recognizer2D(BaseRecognizer):
 
         # should have cls_head if not extracting features
         cls_score,emb_score = self.cls_head(x, num_segs)#8,59
-
+        # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
-        cls_score = self.average_clip(cls_score,
-                                      cls_score.size()[0] // batches)
+        # cls_score = self.average_clip(cls_score,
+        #                               cls_score.size()[0] // batches)
         return cls_score,emb_score
 
     def _do_fcn_test(self, imgs):
@@ -186,8 +186,8 @@ class Recognizer2D(BaseRecognizer):
 
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
-        cls_score = self.average_clip(cls_score,
-                                      cls_score.size()[0] // batches)
+        # cls_score = self.average_clip(cls_score,
+        #                               cls_score.size()[0] // batches)
         return cls_score
     
 
@@ -411,11 +411,11 @@ class Recognizer2D_ours(BaseRecognizer_ours):
         # should have cls_head if not extracting features
         # x = x.squeeze(1)
         cls_score,_ = self.cls_head(x, num_segs)#8,59
-
+        # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
-        cls_score = self.average_clip(cls_score,
-                                      cls_score.size()[0] // batches)
+        # cls_score = self.average_clip(cls_score,
+        #                               cls_score.size()[0] // batches)
         # print(cls_score)
         return cls_score
     
@@ -493,11 +493,12 @@ class Recognizer2D_ours(BaseRecognizer_ours):
         # should have cls_head if not extracting features
         # x = x.squeeze(1)
         cls_score,emb_score = self.cls_head(x, num_segs)#8,59
-
+       
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
-        cls_score = self.average_clip(cls_score,
-                                      cls_score.size()[0] // batches)
+        # cls_score = self.average_clip(cls_score,
+        #                               cls_score.size()[0] // batches)
+        # print("Shape inside recognizer 2d",cls_score.shape)
 
         return cls_score,emb_score
     

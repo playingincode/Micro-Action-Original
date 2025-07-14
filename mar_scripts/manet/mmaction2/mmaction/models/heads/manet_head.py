@@ -113,7 +113,8 @@ class MANetHead(BaseHead):
                             emb_score.size()[1:])
         cls_score = self.consensus(cls_score)
         emb_score = self.consensus(emb_score)
-        return cls_score.squeeze(1),emb_score.squeeze(1)
+        # print("X in normal manet",x.shape)
+        return x,emb_score.squeeze(1)
 
 
 @HEADS.register_module()
@@ -228,4 +229,6 @@ class MANetHead_ours(BaseHead):
                             emb_score.size()[1:])
         cls_score = self.consensus(cls_score)
         emb_score = self.consensus(emb_score)
-        return cls_score.squeeze(1),emb_score.squeeze(1)
+        # print("Cls score",cls_score.squeeze(1).shape)
+        # print("X in our manet",x.shape)
+        return x,emb_score.squeeze(1)

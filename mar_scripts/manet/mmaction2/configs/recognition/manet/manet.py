@@ -88,8 +88,8 @@ data = dict(
         pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=ann_file_val,
-        data_prefix=data_root_val,
+        ann_file=ann_file_test,
+        data_prefix=data_root_test,
         pipeline=test_pipeline))
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_mixture_of_experts_first_try'
+work_dir = './work_dirs/manet_mixture_of_experts_expirementing_with_features_and_scheduler'

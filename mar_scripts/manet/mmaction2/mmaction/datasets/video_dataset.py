@@ -113,7 +113,7 @@ class VideoDataset(BaseDataset):
                     # elif 38 <= label <= 47:
                     #     label = 4
                     #     emb = np.mean(self.embeddings[38:48], axis=0)
-                    # if 49 <= label <= 51:
+                    # if 50 <= label <= 51:
                     #     label = label
                     # else:
                     #     continue

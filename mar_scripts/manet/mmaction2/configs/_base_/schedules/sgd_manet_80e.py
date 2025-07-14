@@ -8,6 +8,6 @@ optimizer = dict(
     weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=20, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[40, 70, 180, 240])
+lr_config = dict(policy='step', step=[150, 300, 400, 450])
 
 total_epochs = 500
