@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_only_testing_images_shape'
+work_dir = './work_dirs/all_our_experts_and_gate_updated'
