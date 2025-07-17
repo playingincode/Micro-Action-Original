@@ -547,8 +547,10 @@ class ResNet(nn.Module):
             if i in self.out_indices:
                 # print("In test",i)
                 outs.append(x)
+        # print(outs[0].shape)
         if len(outs) == 1:
             return outs[0]
+        # print(outs)
 
         return tuple(outs)
 

@@ -108,7 +108,8 @@ class Recognizer2D(BaseRecognizer):
         num_segs = imgs.shape[0] // batches
 
         x = self.extract_feat(imgs)
-
+        # z=x
+        # print("X",x.shape)
         if self.backbone_from in ['torchvision', 'timm']:
             if len(x.shape) == 4 and (x.shape[2] > 1 or x.shape[3] > 1):
                 # apply adaptive avg pooling
@@ -146,6 +147,7 @@ class Recognizer2D(BaseRecognizer):
 
         # should have cls_head if not extracting features
         cls_score,emb_score = self.cls_head(x, num_segs)#8,59
+
         # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically

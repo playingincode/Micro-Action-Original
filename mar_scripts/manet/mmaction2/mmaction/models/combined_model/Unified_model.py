@@ -30,7 +30,8 @@ class CrossAttention(nn.Module):
         Q = Q.unsqueeze(1)                      # [B, 1, d_k]
         attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)  # [B, 1, 6]
         attn_weights = torch.softmax(attn_scores, dim=-1)                       # [B, 1, 6]
-        attended = torch.matmul(attn_weights, V)                                # [B, 1, 52]
+        attended = torch.matmul(attn_weights, V)           
+        # [B, 1, 52]
         return attended.squeeze(1)                                              
     
     
@@ -57,7 +58,9 @@ class CrossAttentionWithTransformer(nn.Module):
         expert_outputs: [B*T, 6, 1408]
         """
         # Step 1: Cross-attention per time step
+        # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
         x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
+        # print("After cross attention",x.shape)
 
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
@@ -384,6 +387,7 @@ class MultiBranchModel(nn.Module):
         """
         
         imgs = data_batch['imgs']
+        # print(imgs.shape)
         label = data_batch['label']
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
@@ -486,15 +490,16 @@ class MultiBranchModel(nn.Module):
         class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
-        responsible_expert_idx = class_to_expert_map[predicted_class]  # [B]
+        gt_labels = label.squeeze()
+        responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
         # 4. Extract correct embedding score from `emb_scores`
-        batch_indices = torch.arange(predicted_class.shape[0], device=predicted_class.device)
+        batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
         expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
 
         # Loss
         loss = dict()
-        gt_labels = label.squeeze()
+        
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
         loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb, **kwargs)
@@ -660,15 +665,17 @@ class MultiBranchModel(nn.Module):
         class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
-        responsible_expert_idx = class_to_expert_map[predicted_class]  # [B]
+                    
+        gt_labels = label.squeeze()
+        responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
         # 4. Extract correct embedding score from `emb_scores`
-        batch_indices = torch.arange(predicted_class.shape[0], device=predicted_class.device)
+        batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
         expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
 
         # Loss
         loss = dict()
-        gt_labels = label.squeeze()
+        
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
         loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb, **kwargs)
