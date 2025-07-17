@@ -258,7 +258,7 @@ class MultiBranchModel(nn.Module):
         # 
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B=B,T=T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -701,7 +701,7 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B=B,T=T)  # [B, 52]
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
