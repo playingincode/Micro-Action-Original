@@ -31,6 +31,7 @@ class CrossAttention(nn.Module):
         attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)  # [B, 1, 6]
         attn_weights = torch.softmax(attn_scores, dim=-1)                       # [B, 1, 6]
         attended = torch.matmul(attn_weights, V)           
+        
         # [B, 1, 52]
         return attended.squeeze(1)                                              
     
@@ -49,10 +50,10 @@ class CrossAttentionWithTransformer(nn.Module):
             activation='gelu'
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-
+     
         self.classifier = nn.Linear(d_model, 52)
 
-    def forward(self, gate_weights, expert_outputs, B=10, T=8):
+    def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
         """
         gate_weights: [B*T, 1408]
         expert_outputs: [B*T, 6, 1408]
@@ -61,16 +62,20 @@ class CrossAttentionWithTransformer(nn.Module):
         # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
         x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
         # print("After cross attention",x.shape)
+        # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
+        # fused=out_manet_model+
 
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
+        out_manet_model=out_manet_model.view(B,T,-1)
+        x=x+out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
 
         # Step 4: Temporal pooling (mean pooling)
         x = x.mean(dim=1)  # [B, 1408]
-
+       
         # Step 5: Final classification
         logits = self.classifier(x)  # [B, 52]
         return logits
@@ -86,6 +91,7 @@ class MultiBranchModel(nn.Module):
                  body_hand_model,
                  head_hand_model,
                  leg_hand_model,
+                 manet_52_model,
                  num_classes=52,
                  loss_cls=dict(type='CrossEntropyLoss', loss_weight=1.0),
                  loss_emb=dict(type='MseLoss'),
@@ -102,6 +108,7 @@ class MultiBranchModel(nn.Module):
         self.body_hand_model = build_model(body_hand_model)
         self.head_hand_model = build_model(head_hand_model)
         self.leg_hand_model = build_model(leg_hand_model)
+        self.manet_52_model=build_model(manet_52_model)
         # print("Main model pretrained",main_model.pretrained)
         load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu')
         load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
@@ -110,6 +117,7 @@ class MultiBranchModel(nn.Module):
         load_checkpoint(self.body_hand_model, body_hand_model.pretrained, map_location='cpu')
         load_checkpoint(self.head_hand_model, head_hand_model.pretrained, map_location='cpu')
         load_checkpoint(self.leg_hand_model, leg_hand_model.pretrained, map_location='cpu')
+        load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
         #  super().__init__()
         self.num_classes = num_classes
         self.in_channels = 1408
@@ -121,6 +129,12 @@ class MultiBranchModel(nn.Module):
         self.body_head_model_linear=nn.Linear(512,1408)
         self.upper_limb_model_linear=nn.Linear(512,1408)
         self.lower_limb_model_linear=nn.Linear(512,1408)
+        self.scale_manet_52_features=nn.Linear(2048,1408)
+        
+        for param in self.manet_52_model.parameters():
+            param.requires_grad = False
+        self.manet_52_model.eval()
+        # self.scale_manet_52_features=nn.
         # self.body_hand_model_linear=nn.Linear(6,6)
         # self.head_hand_model_linear=nn.Linear(10,10)
         # self.leg_hand_model_linear=nn.Linear(4,4)
@@ -173,6 +187,9 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         # print()
@@ -234,7 +251,7 @@ class MultiBranchModel(nn.Module):
         # 
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -420,6 +437,13 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        
+        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        
+        
+        
+        
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
@@ -480,7 +504,7 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
@@ -565,6 +589,7 @@ class MultiBranchModel(nn.Module):
         # """
         
         imgs = data_batch['imgs']
+        # print(imgs.shape)
         label = data_batch['label']
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
@@ -573,6 +598,8 @@ class MultiBranchModel(nn.Module):
         # label = data_batch['label']
         # emb=data_batch['emb']
         # videomae_features=data_batch['videomae_features']
+        # print("Imges shape",imgs.shape)
+        
         
         out_main,emb_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
@@ -595,6 +622,13 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        
+        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        
+        
+        
+        
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
@@ -652,10 +686,10 @@ class MultiBranchModel(nn.Module):
         # weights = weights.unsqueeze(-1)
         # weighted_expert_outputs = expert_outputs_stacked
         # final_logits = weighted_expert_outputs.sum(dim=1)
-        
+        # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
@@ -665,7 +699,6 @@ class MultiBranchModel(nn.Module):
         class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
-                    
         gt_labels = label.squeeze()
         responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
