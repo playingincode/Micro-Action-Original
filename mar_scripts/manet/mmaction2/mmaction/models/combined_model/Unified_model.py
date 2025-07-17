@@ -187,7 +187,7 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        out_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
@@ -442,6 +442,10 @@ class MultiBranchModel(nn.Module):
         out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
+        
+        for name, param in self.manet_52_model.named_parameters():
+            if param.requires_grad:
+                print(f"[WARNING] {name} is still trainable!")
         
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
