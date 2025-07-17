@@ -53,7 +53,7 @@ class CrossAttentionWithTransformer(nn.Module):
      
         self.classifier = nn.Linear(d_model, 52)
 
-    def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
+    def forward(self, gate_weights, expert_outputs,out_manet_model=None, B=10, T=8):
         """
         gate_weights: [B*T, 1408]
         expert_outputs: [B*T, 6, 1408]
@@ -66,9 +66,14 @@ class CrossAttentionWithTransformer(nn.Module):
         # fused=out_manet_model+
 
         # Step 2: Reshape to [B, T, 1408]
+        if out_manet_model!=None:
+            loss = torch.nn.L1Loss()(x, out_manet_model)
+
+        # if mode='train'
         x = x.view(B, T, -1)  # [B, T, 1408]
-        out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        
+        # out_manet_model=out_manet_model.view(B,T,-1)
+        # x=x+out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
@@ -78,6 +83,8 @@ class CrossAttentionWithTransformer(nn.Module):
        
         # Step 5: Final classification
         logits = self.classifier(x)  # [B, 52]
+        if out_manet_model!=None:
+            return logits,loss
         return logits
 
     
@@ -187,8 +194,8 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
@@ -251,7 +258,7 @@ class MultiBranchModel(nn.Module):
         # 
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -444,6 +451,7 @@ class MultiBranchModel(nn.Module):
         
         
         
+        
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
         
@@ -504,7 +512,7 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
+        final_logits,loss_distill= self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
@@ -524,12 +532,16 @@ class MultiBranchModel(nn.Module):
         # Loss
         loss = dict()
         
-
+        
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
         loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb, **kwargs)
+        loss_cls['distill_loss']=loss_distill
+        # print("Loss classifier",loss_cls)
         loss.update(loss_cls)
+        
+        
         loss, log_vars = self._parse_losses(loss)
-
+        # print("Loss final to be passed",loss)
         outputs = dict(
             loss=loss,
             log_vars=log_vars,
@@ -623,8 +635,8 @@ class MultiBranchModel(nn.Module):
         # print(out_head_hand)
         out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
-        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
         
@@ -689,7 +701,7 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]

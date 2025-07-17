@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p gpu='YES' and host='nefgpu46.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name all_our_experts_and_gate_updated
+#OAR --name all_our_experts_and_gate_with_manet_dtsill
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
