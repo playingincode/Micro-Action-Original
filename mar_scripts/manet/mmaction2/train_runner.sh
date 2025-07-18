@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu46.inria.fr'
+#OAR -p gpu='YES' and host='nefgpu56.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name manet_normal_six_classes_second
+#OAR --name manet_normal_body_hand_run_with_manet_check
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
