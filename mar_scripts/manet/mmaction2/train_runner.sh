@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p gpu='YES' and host='nefgpu57.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name all_experts_frozen_with_pcan_idea
+#OAR --name some_our_experts_some_manet_frozen_with_pcan_idea_manet_original_weight
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 

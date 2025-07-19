@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_frozen_with_pcan_idea'
+work_dir = './work_dirs/some_our_experts_some_manet_frozen_with_pcan_idea_manet_original_weight'
