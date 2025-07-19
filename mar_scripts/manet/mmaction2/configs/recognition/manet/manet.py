@@ -7,10 +7,10 @@ _base_ = [
 dataset_type = 'VideoDataset'
 data_root = '/data/stars/share/MA_52/train'
 data_root_val = '/data/stars/share/MA_52/val/'
-data_root_test = './data/ma52/videos_test/'
+data_root_test = '/data/stars/share/MA_52/val/'
 ann_file_train = '/data/stars/share/MA_52/annotations/annotations_train_list_videos.txt'
 ann_file_val = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
-ann_file_test = './data/ma52/test_list_videos.txt'
+ann_file_test = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53],
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_normal_lower_limb_50/'
+work_dir = './work_dirs/manet_test'
