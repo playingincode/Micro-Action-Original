@@ -326,7 +326,7 @@ model = dict(
     
     manet_52_model=dict(
         type='Recognizer2D',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet/best_top1_acc_epoch_46.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/best_top1_acc_epoch_40.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
