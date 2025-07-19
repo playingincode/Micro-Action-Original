@@ -417,7 +417,7 @@ def main():
                               **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    target_dir="./work_dirs/manet/"
+    target_dir="./work_dirs/manet_with_test_set_our_model_all_trainable"
 
     outputs = inference_pytorch(args, cfg, distributed, data_loader)
 

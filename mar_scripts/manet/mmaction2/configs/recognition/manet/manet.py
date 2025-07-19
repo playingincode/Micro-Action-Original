@@ -7,7 +7,7 @@ _base_ = [
 dataset_type = 'VideoDataset'
 data_root = '/data/stars/share/MA_52/train'
 data_root_val = '/data/stars/share/MA_52/val/'
-data_root_test = './data/ma52/videos_test/'
+data_root_test = '/data/stars/share/MA_52/test/'
 ann_file_train = '/data/stars/share/MA_52/annotations/annotations_train_list_videos.txt'
 ann_file_val = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
 ann_file_test = './data/ma52/test_list_videos.txt'
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_with_all_ours_with_pcan_idea_second_try'
+work_dir = './work_dirs/all_experts_implemented_with_pcan_test'
