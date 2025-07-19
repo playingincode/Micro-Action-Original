@@ -189,6 +189,30 @@ class MultiBranchModel(nn.Module):
         
         self.manet_52_model.eval()
         self.tree_loss=TreeLoss()
+        
+        
+        for param in self.manet_52_model.parameters():
+            param.requires_grad = False
+        
+        self.manet_52_model.eval()
+        for param in self.body_head_model.parameters():
+            param.requires_grad = False
+        self.body_head_model.eval()
+        for param in self.upper_limb_model.parameters():
+            param.requires_grad = False
+        self.upper_limb_model.eval()
+        for param in self.lower_limb_model.parameters():
+            param.requires_grad = False
+        self.lower_limb_model.eval()
+        for param in self.body_hand_model.parameters():
+            param.requires_grad = False
+        self.body_hand_model.eval()
+        for param in self.head_hand_model.parameters():
+            param.requires_grad = False
+        self.head_hand_model.eval()
+        for param in self.leg_hand_model.parameters():
+            param.requires_grad = False
+        self.leg_hand_model.eval()
         # for param in self.body_head_model.parameters():
         #     param.requires_grad = False
         # self.body_head_model.eval()
