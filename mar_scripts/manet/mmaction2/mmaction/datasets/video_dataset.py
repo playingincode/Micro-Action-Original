@@ -58,24 +58,26 @@ class VideoDataset(BaseDataset):
                 else:
                     filename, label = line_split
                     label = int(label)
-                    if 0 <= label <= 10:
-                        label=label
-                        emb=self.embeddings[label]
+                    # if 0 <= label <= 10:
+                    #     label=label
+                    #     emb=self.embeddings[label]
                         
                         
                   
 
-                    # elif 11 <= label <= 23:
-                    #     label=1
-                    #     emb=self.embeddings[11]
+                    # if 11 <= label <= 23:
+                    #     label=label
+                    #     emb=self.embeddings[label]
+                    #     label=label-11
                    
                     
                     # # else:
                     # #     continue
-                    # elif 24 <= label <= 31:
-                    #     label=2
-                    #     emb=self.embeddings[24]
-                    #     # label=label-24
+                    if 24 <= label <= 31:
+                        label=label
+                        emb=self.embeddings[label]
+                        label=label-24
+                        # label=label-24
                      
                     # # else:
                     # #     continue
