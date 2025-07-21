@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_implemented_with_pcan_test'
+work_dir = './work_dirs/all_experts_with_pcan_new_idea_loss_modified'

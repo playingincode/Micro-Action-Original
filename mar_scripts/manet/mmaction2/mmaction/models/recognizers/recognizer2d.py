@@ -412,7 +412,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
 
         # should have cls_head if not extracting features
         # x = x.squeeze(1)
-        cls_score,_ = self.cls_head(x, num_segs)#8,59
+        cls_score,_,_ = self.cls_head(x, num_segs)#8,59
         # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
@@ -494,7 +494,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
 
         # should have cls_head if not extracting features
         # x = x.squeeze(1)
-        cls_score,emb_score = self.cls_head(x, num_segs)#8,59
+        cls_score,emb_score,cls_score_passed = self.cls_head(x, num_segs)#8,59
        
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
@@ -502,7 +502,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
         #                               cls_score.size()[0] // batches)
         # print("Shape inside recognizer 2d",cls_score.shape)
 
-        return cls_score,emb_score
+        return cls_score,emb_score,cls_score_passed
     
     
 

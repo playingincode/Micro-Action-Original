@@ -14,6 +14,25 @@ import numpy as np
 def fine2coarse(x):
     # if x <= 4:
     #     return 0
+
+    if 0 <= x <= 10:
+        return 0
+    elif 11 <= x <= 23:
+        return 1
+    elif 24 <= x <= 31:
+        return 2
+    elif 32 <= x <= 37:
+        return 3
+    elif 38 <= x <= 47:
+        return 4
+    else:
+        return 5
+    
+    
+
+def fine2coarse_from_52(x):
+    # if x <= 4:
+    #     return 0
     if 0 <= x <= 10:
         return 0
     elif 11 <= x <= 23:
@@ -55,34 +74,63 @@ class CrossAttention(nn.Module):
     
     
 
+# class TreeLoss(nn.Module):
+#     def __init__(self):
+#         super(TreeLoss, self).__init__()
+#         self.stateSpace = self.generateStateSpace().cuda()
+#         self.sig = nn.Sigmoid()
+
 class TreeLoss(nn.Module):
     def __init__(self):
         super(TreeLoss, self).__init__()
         self.stateSpace = self.generateStateSpace().cuda()
         self.sig = nn.Sigmoid()
 
-    def forward(self, pred_coarse,pred_fine, labels_coarse,labels_fine):
-        pred_coarse=self.sig(pred_coarse)
-        pred_fine=self.sig(pred_fine)
-        pred_fusion=torch.cat((pred_coarse,pred_fine),dim=1)
-        labels_fine=labels_fine+6
-        index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)
-        joint = torch.exp(index)
-        z = torch.sum(joint, dim=0)
-        loss = torch.zeros(pred_fusion.shape[0], dtype=torch.float64).cuda()
+    def forward(self, pred_coarse, pred_fine, labels_coarse, labels_fine, final_cls_logits_of_experts):
+        pred_coarse = self.sig(pred_coarse)                     # [B, 6]
+        pred_fine = self.sig(pred_fine)                         # [B, 52]
+        pred_fine_from_experts = self.sig(final_cls_logits_of_experts)  # [B, 52]
+
+        pred_fusion = torch.cat((pred_coarse, pred_fine, pred_fine_from_experts), dim=1)  # [B, 110]
+
+        # Shift labels to match fusion vector index space
+        labels_fine_in_fusion = labels_fine + 6  # pred_fine starts at idx 6
+        labels_fine_expert = labels_fine + 58    # pred_fine_from_experts starts at idx 58
+
+        # Calculate TreeLoss
+        index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)  # [110, B]
+        joint = torch.exp(index)                                            # [110, B]
+        z = torch.sum(joint, dim=0)                                         # [B]
+
+        loss = torch.zeros(pred_fusion.shape[0], dtype=torch.float64, device=pred_fusion.device)
+
         for i in range(len(labels_fine)):
-            marginal = torch.sum(torch.index_select(joint[:, i], 0, torch.where(self.stateSpace[:,labels_fine[i]] > 0)[0]))
+            # Tree marginalization (labels_fine and labels_fine_expert both contribute)
+            idx1 = torch.where(self.stateSpace[:, labels_fine_in_fusion[i]] > 0)[0]
+            idx2 = torch.where(self.stateSpace[:, labels_fine_expert[i]] > 0)[0]
+            idx_total = torch.unique(torch.cat((idx1, idx2)))
+
+            marginal = torch.sum(joint[idx_total, i])
             loss[i] = -torch.log(marginal / z[i])
+
         return torch.mean(loss)
-    
+
     def generateStateSpace(self):
-        stat_list = np.eye(58)
+        stat_list = np.eye(110)
+
+        # For pred_fine (indices 6–57), map to coarse (0–5)
         for i in range(6, 58):
-            temp=stat_list[i]
-            index=np.where(temp>0)[0]
-            coarse=fine2coarse(int(index)-6)
-            stat_list[i][coarse]=1 
-        stateSpace = torch.tensor(stat_list)
+            index = i - 6  # 0-based fine class index
+            coarse = fine2coarse(index)  # should return 0–5
+            stat_list[i][coarse] = 1
+
+        # For pred_fine_from_experts (indices 58–109), map to coarse (0–5)
+        for i in range(58, 110):
+            index = i - 58  # 0-based fine class index
+            coarse = fine2coarse_from_52(index)  # also returns 0–5
+            stat_list[i][coarse] = 1
+
+        stateSpace = torch.tensor(stat_list, dtype=torch.float32)
         return stateSpace
     
 class CrossAttentionWithTransformer(nn.Module):
@@ -157,6 +205,7 @@ class MultiBranchModel(nn.Module):
         self.head_hand_model = build_model(head_hand_model)
         self.leg_hand_model = build_model(leg_hand_model)
         self.manet_52_model=build_model(manet_52_model)
+
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
@@ -189,7 +238,8 @@ class MultiBranchModel(nn.Module):
         
         self.manet_52_model.eval()
         self.tree_loss=TreeLoss()
-        # for param in self.body_head_model.parameters():
+        # self.body_head_cls_head=nn.Linear(1408,11)
+        # rameters():
         #     param.requires_grad = False
         # self.body_head_model.eval()
         # for param in self.upper_limb_model.parameters():
@@ -363,7 +413,7 @@ class MultiBranchModel(nn.Module):
         return full
 
 
-    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,**kwargs):
+    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,**kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -398,7 +448,7 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels,final_cls_logits_of_experts)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
@@ -443,6 +493,28 @@ class MultiBranchModel(nn.Module):
             log_vars[loss_name] = loss_value.item()
 
         return loss, log_vars
+    
+    def merge_expert_cls_scores(self,cls_scores, expert_class_indices, num_classes=52):
+        """
+        Merges individual expert logits into a full [B, 52] tensor.
+
+        Args:
+            cls_scores (List[Tensor]): List of [B, 1, C_i] expert scores.
+            expert_class_indices (List[List[int]]): Class index mapping for each expert.
+            num_classes (int): Total number of fine-level classes.
+
+        Returns:
+            Tensor: [B, 52] tensor with logits placed in the right class positions.
+        """
+        B = cls_scores[0].size(0)
+        merged_logits = torch.full((B, num_classes), float('-inf'), device=cls_scores[0].device)
+
+        for score, indices in zip(cls_scores, expert_class_indices):
+            score = score.squeeze(1)  # [B, C_i]
+            assert score.size(1) == len(indices), "Mismatch between score size and indices"
+            merged_logits[:, indices] = score
+
+        return merged_logits  # [B, 52]
     
     def train_step(self, data_batch, optimizer, **kwargs):
 
@@ -491,28 +563,31 @@ class MultiBranchModel(nn.Module):
         # print("Imges shape",imgs.shape)
         
         
-        out_main,cls_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        out_main,cls_score_main,_ = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
         # print(cls_score_main)
         # out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
         # print(out_main)
-        out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_head,emb_score_body_head,cls_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_head=self.body_head_model_linear(out_body_head)
         # print("out_body_head",out_body_head.shape)
-        out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_upper_limb,emb_score_upper_limb,cls_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
-        out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_lower_limb,emb_score_lower_limb,cls_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
         # print(out_lower_limb)
-        out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_hand,emb_score_body_hand,cls_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
-        out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_head_hand,emb_score_head_hand,cls_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
-        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand ,emb_score_leg_hand,cls_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        
+       
+
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
@@ -600,13 +675,23 @@ class MultiBranchModel(nn.Module):
         # 4. Extract correct embedding score from `emb_scores`
         batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
         expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
-
+        
+        
+        cls_scores_of_experts = [
+            cls_score_body_head,
+            cls_score_upper_limb,
+            cls_score_lower_limb,
+            cls_score_body_hand,
+            cls_score_head_hand,
+            cls_score_leg_hand
+        ]
+        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main, **kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, **kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
@@ -681,28 +766,31 @@ class MultiBranchModel(nn.Module):
         # print("Imges shape",imgs.shape)
         
         
-        out_main,cls_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        out_main,cls_score_main,_ = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
         # print(cls_score_main)
         # out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
         # print(out_main)
-        out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_head,emb_score_body_head,cls_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_head=self.body_head_model_linear(out_body_head)
         # print("out_body_head",out_body_head.shape)
-        out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_upper_limb,emb_score_upper_limb,cls_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
-        out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        out_lower_limb,emb_score_lower_limb,cls_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
         # print(out_lower_limb)
-        out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_body_hand,emb_score_body_hand,cls_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
-        out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_head_hand,emb_score_head_hand,cls_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
-        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        out_leg_hand ,emb_score_leg_hand,cls_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        
+       
+
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
@@ -790,13 +878,23 @@ class MultiBranchModel(nn.Module):
         # 4. Extract correct embedding score from `emb_scores`
         batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
         expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
-
+        
+        
+        cls_scores_of_experts = [
+            cls_score_body_head,
+            cls_score_upper_limb,
+            cls_score_lower_limb,
+            cls_score_body_hand,
+            cls_score_head_hand,
+            cls_score_leg_hand
+        ]
+        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main, **kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, **kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 

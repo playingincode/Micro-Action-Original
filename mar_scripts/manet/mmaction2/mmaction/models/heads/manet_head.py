@@ -228,10 +228,11 @@ class MANetHead_ours(BaseHead):
             emb_score = emb_score.view((-1, self.num_segments) +
                             emb_score.size()[1:])
         cls_score = self.consensus(cls_score)
+        # print("Classification score",cls_score.shape)
         emb_score = self.consensus(emb_score)
         # print("Cls score",cls_score.squeeze(1).shape)
         # print("X in our manet",x.shape)
-        return x,emb_score.squeeze(1)
+        return x,emb_score.squeeze(1),cls_score.squeeze(1)
 
 
 
@@ -349,4 +350,4 @@ class MANetHead_ours_returns_cls_loss(BaseHead):
         emb_score = self.consensus(emb_score)
         # print("Cls score",cls_score.squeeze(1).shape)
         # print("X in our manet",x.shape)
-        return x,cls_score.squeeze(1)
+        return x,cls_score.squeeze(1),cls_score.squeeze(1)
