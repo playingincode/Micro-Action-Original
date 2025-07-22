@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu57.inria.fr'
+#OAR -p gpu='YES' and host='nefgpu56.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name all_experts_with_new_pcan_loss
+#OAR --name all_experts_with_Selective_Entropy_Regularization
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 

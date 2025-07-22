@@ -89,13 +89,13 @@ class TreeLoss(nn.Module):
     def forward(self, pred_coarse, pred_fine, labels_coarse, labels_fine, final_cls_logits_of_experts):
         pred_coarse = self.sig(pred_coarse)                     # [B, 6]
         pred_fine = self.sig(pred_fine)                         # [B, 52]
-        pred_fine_from_experts = self.sig(final_cls_logits_of_experts)  # [B, 52]
+        # pred_fine_from_experts = self.sig(final_cls_logits_of_experts)  # [B, 52]
 
-        pred_fusion = torch.cat((pred_coarse, pred_fine, pred_fine_from_experts), dim=1)  # [B, 110]
+        pred_fusion = torch.cat((pred_coarse, pred_fine), dim=1)  # [B, 110]
 
         # Shift labels to match fusion vector index space
         labels_fine_in_fusion = labels_fine + 6  # pred_fine starts at idx 6
-        labels_fine_expert = labels_fine + 58    # pred_fine_from_experts starts at idx 58
+        # labels_fine_expert = labels_fine + 58    # pred_fine_from_experts starts at idx 58
 
         # Calculate TreeLoss
         index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)  # [110, B]
@@ -107,8 +107,8 @@ class TreeLoss(nn.Module):
         for i in range(len(labels_fine)):
             # Tree marginalization (labels_fine and labels_fine_expert both contribute)
             idx1 = torch.where(self.stateSpace[:, labels_fine_in_fusion[i]] > 0)[0]
-            idx2 = torch.where(self.stateSpace[:, labels_fine_expert[i]] > 0)[0]
-            idx_total = torch.unique(torch.cat((idx1, idx2)))
+            # idx2 = torch.where(self.stateSpace[:, labels_fine_expert[i]] > 0)[0]
+            idx_total = torch.unique(idx1)
 
             marginal = torch.sum(joint[idx_total, i])
             loss[i] = -torch.log(marginal / z[i])
@@ -116,7 +116,7 @@ class TreeLoss(nn.Module):
         return torch.mean(loss)
 
     def generateStateSpace(self):
-        stat_list = np.eye(110)
+        stat_list = np.eye(58)
 
         # For pred_fine (indices 6–57), map to coarse (0–5)
         for i in range(6, 58):
@@ -125,10 +125,10 @@ class TreeLoss(nn.Module):
             stat_list[i][coarse] = 1
 
         # For pred_fine_from_experts (indices 58–109), map to coarse (0–5)
-        for i in range(58, 110):
-            index = i - 58  # 0-based fine class index
-            coarse = fine2coarse_from_52(index)  # also returns 0–5
-            stat_list[i][coarse] = 1
+        # for i in range(58, 110):
+        #     index = i - 58  # 0-based fine class index
+        #     coarse = fine2coarse_from_52(index)  # also returns 0–5
+        #     stat_list[i][coarse] = 1
 
         stateSpace = torch.tensor(stat_list, dtype=torch.float32)
         return stateSpace
@@ -413,7 +413,7 @@ class MultiBranchModel(nn.Module):
         return full
 
 
-    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,**kwargs):
+    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,loss_entropy_regulariztion,**kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -451,6 +451,7 @@ class MultiBranchModel(nn.Module):
         loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels,final_cls_logits_of_experts)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
+        losses['entropy_regularization_loss']=0.1*loss_entropy_regulariztion
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):
             losses.update(loss_cls)
@@ -685,13 +686,28 @@ class MultiBranchModel(nn.Module):
             cls_score_head_hand,
             cls_score_leg_hand
         ]
+        
+        selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
+
+        def entropy_expert(x):
+            x = x.clamp(min=1e-8)  # avoid log(0)
+            return -(x * x.log()).sum(dim=-1)  # [B]
+
+        loss_entropy = 0
+        for i, expert_logits in enumerate(cls_scores_of_experts):
+            expert_probs = F.softmax(expert_logits, dim=-1)
+            entropy = entropy_expert(expert_probs)
+            weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
+            loss_entropy += (entropy * weight).mean()
+
+        
         final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, **kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_entropy,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
@@ -888,13 +904,28 @@ class MultiBranchModel(nn.Module):
             cls_score_head_hand,
             cls_score_leg_hand
         ]
+        
+        selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
+
+        def entropy_expert(x):
+            x = x.clamp(min=1e-8)  # avoid log(0)
+            return -(x * x.log()).sum(dim=-1)  # [B]
+
+        loss_entropy = 0
+        for i, expert_logits in enumerate(cls_scores_of_experts):
+            expert_probs = F.softmax(expert_logits, dim=-1)
+            entropy = entropy_expert(expert_probs)
+            weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
+            loss_entropy += (entropy * weight).mean()
+
+        
         final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, **kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_entropy,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
