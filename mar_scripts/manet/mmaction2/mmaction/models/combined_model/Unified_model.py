@@ -413,7 +413,7 @@ class MultiBranchModel(nn.Module):
         return full
 
 
-    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,loss_entropy_regulariztion,**kwargs):
+    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,loss_moe_fusion,**kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -451,7 +451,7 @@ class MultiBranchModel(nn.Module):
         loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels,final_cls_logits_of_experts)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
-        losses['entropy_regularization_loss']=0.1*loss_entropy_regulariztion
+        losses['loss_moe_fusion'] = 0.1 * loss_moe_fusion 
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):
             losses.update(loss_cls)
@@ -687,27 +687,46 @@ class MultiBranchModel(nn.Module):
             cls_score_leg_hand
         ]
         
+        expanded_logits_list = [
+            self.expand_to_52(cls_score_body_head, expert_class_indices[0]),
+            self.expand_to_52(cls_score_upper_limb, expert_class_indices[1]),
+            self.expand_to_52(cls_score_lower_limb, expert_class_indices[2]),
+            self.expand_to_52(cls_score_body_hand, expert_class_indices[3]),
+            self.expand_to_52(cls_score_head_hand, expert_class_indices[4]),
+            self.expand_to_52(cls_score_leg_hand, expert_class_indices[5]),
+        ]  # each [B, 52]
+        
         selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
-        def entropy_expert(x):
-            x = x.clamp(min=1e-8)  # avoid log(0)
-            return -(x * x.log()).sum(dim=-1)  # [B]
+        logits_moe = sum(
+            selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
+            for i in range(6)
+        )  # [B, 52]
+        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
+        
+        loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
+        
+        # selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
-        loss_entropy = 0
-        for i, expert_logits in enumerate(cls_scores_of_experts):
-            expert_probs = F.softmax(expert_logits, dim=-1)
-            entropy = entropy_expert(expert_probs)
-            weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
-            loss_entropy += (entropy * weight).mean()
+        # def entropy_expert(x):
+        #     x = x.clamp(min=1e-8)  # avoid log(0)
+        #     return -(x * x.log()).sum(dim=-1)  # [B]
+
+        # loss_entropy = 0
+        # for i, expert_logits in enumerate(cls_scores_of_experts):
+        #     expert_probs = F.softmax(expert_logits, dim=-1)
+        #     entropy = entropy_expert(expert_probs)
+        #     weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
+        #     loss_entropy += (entropy * weight).mean()
 
         
-        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
+        
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_entropy,**kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_moe_fusion,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
@@ -905,27 +924,46 @@ class MultiBranchModel(nn.Module):
             cls_score_leg_hand
         ]
         
+        expanded_logits_list = [
+            self.expand_to_52(cls_score_body_head, expert_class_indices[0]),
+            self.expand_to_52(cls_score_upper_limb, expert_class_indices[1]),
+            self.expand_to_52(cls_score_lower_limb, expert_class_indices[2]),
+            self.expand_to_52(cls_score_body_hand, expert_class_indices[3]),
+            self.expand_to_52(cls_score_head_hand, expert_class_indices[4]),
+            self.expand_to_52(cls_score_leg_hand, expert_class_indices[5]),
+        ]  # each [B, 52]
+        
         selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
-        def entropy_expert(x):
-            x = x.clamp(min=1e-8)  # avoid log(0)
-            return -(x * x.log()).sum(dim=-1)  # [B]
+        logits_moe = sum(
+            selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
+            for i in range(6)
+        )  # [B, 52]
+        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
+        
+        loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
+        
+        # selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
-        loss_entropy = 0
-        for i, expert_logits in enumerate(cls_scores_of_experts):
-            expert_probs = F.softmax(expert_logits, dim=-1)
-            entropy = entropy_expert(expert_probs)
-            weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
-            loss_entropy += (entropy * weight).mean()
+        # def entropy_expert(x):
+        #     x = x.clamp(min=1e-8)  # avoid log(0)
+        #     return -(x * x.log()).sum(dim=-1)  # [B]
+
+        # loss_entropy = 0
+        # for i, expert_logits in enumerate(cls_scores_of_experts):
+        #     expert_probs = F.softmax(expert_logits, dim=-1)
+        #     entropy = entropy_expert(expert_probs)
+        #     weight = 1.0 - selector_soft[:, i]  # low-weight experts should not be confident
+        #     loss_entropy += (entropy * weight).mean()
 
         
-        final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
+        
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_entropy,**kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_moe_fusion,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
