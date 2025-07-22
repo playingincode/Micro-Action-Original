@@ -64,6 +64,18 @@ class TreeLoss(nn.Module):
     def forward(self, pred_coarse,pred_fine, labels_coarse,labels_fine):
         pred_coarse=self.sig(pred_coarse)
         pred_fine=self.sig(pred_fine)
+        prob_experts_fine = F.softmax(pred_fine, dim=-1)   # [B, 52]
+        prob_selector_coarse = F.softmax(pred_coarse, dim=-1)             # [B, 6]
+
+        # Build expert-derived coarse prob
+        B=labels_fine.shape[0]
+        prob_experts_coarse = torch.zeros((B, 6), device='cuda:0')
+        for i in range(52):
+            coarse_idx = fine2coarse(i)
+            prob_experts_coarse[:, coarse_idx] += prob_experts_fine[:, i]
+
+        # KL divergence: experts → selector
+        loss_hierarchy_agreement = F.kl_div(prob_selector_coarse.log(), prob_experts_coarse, reduction='batchmean')
         pred_fusion=torch.cat((pred_coarse,pred_fine),dim=1)
         labels_fine=labels_fine+6
         index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)
@@ -73,7 +85,7 @@ class TreeLoss(nn.Module):
         for i in range(len(labels_fine)):
             marginal = torch.sum(torch.index_select(joint[:, i], 0, torch.where(self.stateSpace[:,labels_fine[i]] > 0)[0]))
             loss[i] = -torch.log(marginal / z[i])
-        return torch.mean(loss)
+        return torch.mean(loss)+loss_hierarchy_agreement
     
     def generateStateSpace(self):
         stat_list = np.eye(58)
