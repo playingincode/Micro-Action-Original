@@ -345,6 +345,27 @@ model = dict(
         train_cfg=None,
         test_cfg=dict(average_clips='prob')
     ),
+    leg_hand_manet_backbone_model=dict(
+        type='Recognizer2D_ours_trying_manet_backbone',
+        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet/best_top1_acc_epoch_46.pth',
+        backbone=dict(
+            type='ResNetTSM',
+            pretrained='torchvision://resnet50',
+            depth=50,
+            norm_eval=False,
+            shift_div=8),
+        cls_head=dict(
+            type='MANetHead_ours',
+            num_classes=6,
+            in_channels=2048,
+            spatial_type='avg',
+            consensus=dict(type='AvgConsensus', dim=1),
+            dropout_ratio=0.5,
+            init_std=0.001,
+            is_shift=True),
+        train_cfg=None,
+        test_cfg=dict(average_clips='prob')
+    ),
 )
 
 
