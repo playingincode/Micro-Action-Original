@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_with_loss_moe_fusion'
+work_dir = './work_dirs/all_experts_with_attention_confidence_alignment_loss'

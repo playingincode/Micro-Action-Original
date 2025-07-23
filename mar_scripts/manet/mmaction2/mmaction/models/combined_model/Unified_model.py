@@ -413,7 +413,7 @@ class MultiBranchModel(nn.Module):
         return full
 
 
-    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,loss_moe_fusion,**kwargs):
+    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,final_cls_logits_of_experts,loss_attn_align,**kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -451,7 +451,7 @@ class MultiBranchModel(nn.Module):
         loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels,final_cls_logits_of_experts)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
-        losses['loss_moe_fusion'] = 0.1 * loss_moe_fusion 
+        losses['loss_attn_align'] = 0.1 * loss_attn_align 
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):
             losses.update(loss_cls)
@@ -695,16 +695,38 @@ class MultiBranchModel(nn.Module):
             self.expand_to_52(cls_score_head_hand, expert_class_indices[4]),
             self.expand_to_52(cls_score_leg_hand, expert_class_indices[5]),
         ]  # each [B, 52]
+        selector_soft = F.softmax(cls_score_main, dim=-1)
         
-        selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
+        def entropy(probs):
+            probs = probs.clamp(min=1e-8)
+            return -(probs * probs.log()).sum(dim=1)  # [B]
 
-        logits_moe = sum(
-            selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
-            for i in range(6)
-        )  # [B, 52]
+        confidences = [
+            1.0 - entropy(F.softmax(logits, dim=-1))  # [B]
+            for logits in expanded_logits_list
+        ]  # list of 6 [B]
+
+        # 2. Stack into [B, 6]
+        confidences = torch.stack(confidences, dim=1)  # [B, 6]
+
+        # 3. Normalize confidences into a probability distribution
+        confidences = F.softmax(confidences, dim=1)  # [B, 6]
+
+        # 4. Compute attention alignment loss (selector_soft already softmaxed)
+        loss_attn_align = F.kl_div(
+            selector_soft.log(), confidences, reduction='batchmean'
+        )
+
+        
+         # [B, 6]
+
+        # logits_moe = sum(
+        #     selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
+        #     for i in range(6)
+        # )  # [B, 52]
         final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         
-        loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
+        # loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
         
         # selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
@@ -726,7 +748,7 @@ class MultiBranchModel(nn.Module):
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_moe_fusion,**kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_attn_align,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
@@ -787,6 +809,7 @@ class MultiBranchModel(nn.Module):
         during val epochs. Note that the evaluation after training epochs is
         not implemented with this method, but an evaluation hook.
         # """
+        
         
         imgs = data_batch['imgs']
         # print(imgs.shape)
@@ -932,16 +955,38 @@ class MultiBranchModel(nn.Module):
             self.expand_to_52(cls_score_head_hand, expert_class_indices[4]),
             self.expand_to_52(cls_score_leg_hand, expert_class_indices[5]),
         ]  # each [B, 52]
+        selector_soft = F.softmax(cls_score_main, dim=-1)
         
-        selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
+        def entropy(probs):
+            probs = probs.clamp(min=1e-8)
+            return -(probs * probs.log()).sum(dim=1)  # [B]
 
-        logits_moe = sum(
-            selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
-            for i in range(6)
-        )  # [B, 52]
+        confidences = [
+            1.0 - entropy(F.softmax(logits, dim=-1))  # [B]
+            for logits in expanded_logits_list
+        ]  # list of 6 [B]
+
+        # 2. Stack into [B, 6]
+        confidences = torch.stack(confidences, dim=1)  # [B, 6]
+
+        # 3. Normalize confidences into a probability distribution
+        confidences = F.softmax(confidences, dim=1)  # [B, 6]
+
+        # 4. Compute attention alignment loss (selector_soft already softmaxed)
+        loss_attn_align = F.kl_div(
+            selector_soft.log(), confidences, reduction='batchmean'
+        )
+
+        
+         # [B, 6]
+
+        # logits_moe = sum(
+        #     selector_soft[:, i].unsqueeze(1) * expanded_logits_list[i]
+        #     for i in range(6)
+        # )  # [B, 52]
         final_cls_logits_of_experts = self.merge_expert_cls_scores(cls_scores_of_experts, expert_class_indices)
         
-        loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
+        # loss_moe_fusion = F.mse_loss(logits_moe, final_cls_logits_of_experts)
         
         # selector_soft = F.softmax(cls_score_main, dim=-1)  # [B, 6]
 
@@ -963,7 +1008,7 @@ class MultiBranchModel(nn.Module):
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_moe_fusion,**kwargs)
+        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main,final_cls_logits_of_experts, loss_attn_align,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
