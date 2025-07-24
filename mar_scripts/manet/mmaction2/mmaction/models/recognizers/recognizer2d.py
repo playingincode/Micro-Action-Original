@@ -771,14 +771,14 @@ class Recognizer2D_ours_trying_manet_backbone(BaseRecognizer_ours_manet_backbone
 
         # should have cls_head if not extracting features
         # x = x.squeeze(1)
-        cls_score,_,_ = self.cls_head(x, num_segs)#8,59
+        cls_score,_,cls_score_new = self.cls_head(x, num_segs)#8,59
         # print("Shape inside recognizer 2d",cls_score.shape)
         assert cls_score.size()[0] % batches == 0
         # calculate num_crops automatically
         # cls_score = self.average_clip(cls_score,
         #                               cls_score.size()[0] // batches)
         # print(cls_score)
-        return cls_score
+        return cls_score_new
     
 
     def _do_train_logits_and_emb_scores(self, imgs,labels,embs_la,videomae_features):

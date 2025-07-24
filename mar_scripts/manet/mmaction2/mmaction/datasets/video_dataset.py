@@ -59,41 +59,45 @@ class VideoDataset(BaseDataset):
                     filename, label = line_split
                     label = int(label)
                     # if 0 <= label <= 10:
+                    #     # label=0
                     #     label=0
                     #     emb=self.embeddings[0]
-                  
+                        
 
-                    # elif 11 <= label <= 23:
-                    #     label=1
-                    #     emb=self.embeddings[11]
+                    # if 11 <= label <= 23:
+                    #     label=label
+                    #     emb=self.embeddings[label]
+                    #     label=label-11
                    
                     
                     # # else:
                     # #     continue
-                    # elif 24 <= label <= 31:
-                    #     label=2
-                    #     emb=self.embeddings[24]
-                    #     # label=label-24
+                    # if 24 <= label <= 31:
+                    #     label=label
+                    #     emb=self.embeddings[label]
+                    #     label=label-24
                      
                     # # else:
                     # #     continue
                         
-                    # elif 32 <= label <= 37:
-                    #     label=3
-                    #     emb=self.embeddings[32]
-                    #     # label=label-32
+                    #body hand
+                    # if 32 <= label <= 37:
+                    #     label=label
+                    #     emb=self.embeddings[label]
+                    #     label=label-32
                     # # else:
                     # #     continue
-                    # elif 38 <= label <= 47:
-                    #     label=4
-                    #     emb=self.embeddings[38]
-                        # label=label-38
+                    if 38 <= label <= 47:
+                        label=label
+                        emb=self.embeddings[label]
+                        label=label-38
                     # else:
                     #     continue
                     # if 48 <= label <= 51:
                     #     label=label
                     #     emb=self.embeddings[label]
                     #     label=label-48
+                        # label=label-48
                     # else:
                     #     continue
                     # if 0 <= label <= 10:
@@ -115,13 +119,13 @@ class VideoDataset(BaseDataset):
                     #     emb = np.mean(self.embeddings[38:48], axis=0)
                     # if 50 <= label <= 51:
                     #     label = label
-                    # else:
-                    #     continue
+                    else:
+                        continue
                     
                         
                 if self.data_prefix is not None:
                     filename = osp.join(self.data_prefix, filename)
                 # print(self.embeddings.shape)
-                emb=self.embeddings[label]
+                # emb=self.embeddings[label]
                 video_infos.append(dict(filename=filename, label=label,emb=emb))
         return video_infos
