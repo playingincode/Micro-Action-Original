@@ -178,7 +178,7 @@ model = dict(
     type='MultiBranchModel',
     main_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_six_classes_our_model/best_top1_acc_epoch_32.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_bacbone_for_experts_six_class_expert/best_top1_acc_epoch_16.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -188,7 +188,7 @@ model = dict(
         cls_head=dict(
             type='MANetHead_ours_returns_cls_loss',
             num_classes=6,
-            in_channels=1408,
+            in_channels=2048,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
             dropout_ratio=0.5,
@@ -199,7 +199,7 @@ model = dict(
     ),
     body_head_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_body_passive/best_top1_acc_epoch_31.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_bacbone_for_experts_head_body/best_top1_acc_epoch_432.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -220,7 +220,7 @@ model = dict(
     ),
     upper_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_upper_limb_passive/best_top1_acc_epoch_39.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_backbone_for_experts_upper_limb/best_top1_acc_epoch_304.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -241,7 +241,7 @@ model = dict(
     ),
     lower_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_lower_limb_passive/best_top1_acc_epoch_57.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_backbone_for_experts_lower_limb/best_top1_acc_epoch_61.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -261,7 +261,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     body_hand_model=dict(
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_body_hand_passive/best_top1_acc_epoch_11.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_backbone_for_experts_body_hand/best_top1_acc_epoch_11.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
@@ -283,7 +283,7 @@ model = dict(
     ),
     head_hand_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_hand_passive/best_top1_acc_epoch_7.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_backbone_for_experts_head_hand/best_top1_acc_epoch_55.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -303,7 +303,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     leg_hand_model=dict(
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_leg_hand/best_top1_acc_epoch_33.pth',
+        pretrained='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_backbone_for_experts_leg_hand/best_top1_acc_epoch_182.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
