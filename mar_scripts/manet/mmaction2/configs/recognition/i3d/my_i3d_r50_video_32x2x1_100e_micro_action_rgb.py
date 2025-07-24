@@ -2,12 +2,12 @@ _base_ = ['./i3d_r50_32x2x1_100e_kinetics400_rgb.py']
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = './data/ma52/videos_train/'
-data_root_val = './data/ma52/videos_val/'
-data_root_test = './data/ma52/videos_test/'
-ann_file_train = './data/ma52/train_list_videos.txt'
-ann_file_val = './data/ma52/val_list_videos.txt'
-ann_file_test = './data/ma52/test_list_videos.txt'
+data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
+data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+data_root_test = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
+ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 train_pipeline = [
@@ -41,7 +41,7 @@ val_pipeline = [
     dict(type='CenterCrop', crop_size=224),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='FormatShape', input_format='NCTHW'),
-    dict(type='Collect', keys=['imgs', 'label'], meta_keys=[]),
+    dict(type='Collect', keys=['imgs', 'label','emb'], meta_keys=[]),
     dict(type='ToTensor', keys=['imgs'])
 ]
 test_pipeline = [
@@ -61,7 +61,7 @@ test_pipeline = [
     dict(type='ToTensor', keys=['imgs'])
 ]
 data = dict(
-    videos_per_gpu=8,
+    videos_per_gpu=16,
     workers_per_gpu=2,
     test_dataloader=dict(videos_per_gpu=1),
     train=dict(
@@ -81,4 +81,4 @@ data = dict(
         pipeline=test_pipeline))
 
 # runtime settings
-work_dir = './work_dirs/my_i3d_r50_video_3d_32x2x1_100e_micro_action_rgb/'
+work_dir = './work_dirs/I3d_MPIIGroupInteraction/'

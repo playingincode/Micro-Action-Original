@@ -266,9 +266,9 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
                 raise ValueError('Label should not be None.')
             if self.blending is not None:
                 imgs, label = self.blending(imgs, label)
-            return self.forward_train(imgs, label,emb, **kwargs)
+            return self.forward_train(imgs, label, **kwargs)
 
-        return self.forward_test(imgs,label,emb, **kwargs)
+        return self.forward_test(imgs)
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.
@@ -304,7 +304,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         """
         imgs = data_batch['imgs']
         label = data_batch['label']
-        emb=data_batch['emb']
+        # emb=data_batch['emb']
+        emb=None
 
         aux_info = {}
         for item in self.aux_info:
@@ -331,7 +332,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         """
         imgs = data_batch['imgs']
         label = data_batch['label']
-        emb=data_batch['emb']
+        # emb=data_batch['emb']
+        emb=None
 
         aux_info = {}
         for item in self.aux_info:

@@ -76,7 +76,7 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
     def forward(self, x):
         """Defines the computation performed at every call."""
 
-    def loss(self, cls_score, emb_score,labels,embs_la, **kwargs):
+    def loss(self, cls_score,labels, **kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -110,8 +110,8 @@ class BaseHead(nn.Module, metaclass=ABCMeta):
                       self.label_smooth_eps / self.num_classes)
 
         loss_cls = self.loss_cls(cls_score, labels, **kwargs)
-        loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
-        loss_cls+=loss_embd
+        # loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
+        # loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):
             losses.update(loss_cls)

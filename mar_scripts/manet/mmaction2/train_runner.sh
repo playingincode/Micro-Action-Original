@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu57.inria.fr'
+#OAR -p gpu='YES' and host='nefgpu46.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name manet_without_word_embedding_retry_new
+#OAR --name I3d_MPIIGroupInteraction
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic
+python -u tools/train.py configs/recognition/i3d/my_i3d_r50_video_32x2x1_100e_micro_action_rgb.py --seed=0 --deterministic
