@@ -28,7 +28,7 @@ def fine2coarse(x):
         return 5
     
 class CrossAttention(nn.Module):
-    def __init__(self, d_model=1408, d_k=32):
+    def __init__(self, d_model=2048, d_k=32):
         super().__init__()
         self.d_k = d_k
         self.query_proj = nn.Linear(d_model, d_k)
@@ -86,7 +86,7 @@ class TreeLoss(nn.Module):
         return stateSpace
     
 class CrossAttentionWithTransformer(nn.Module):
-    def __init__(self, d_model=1408, num_heads=4, num_layers=2):
+    def __init__(self, d_model=2048, num_heads=4, num_layers=2):
         super().__init__()
         self.cross_attn = CrossAttention(d_k=d_model)
 
@@ -115,8 +115,8 @@ class CrossAttentionWithTransformer(nn.Module):
 
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
-        out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        # out_manet_model=out_manet_model.view(B,T,-1)
+        # x=x+out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
@@ -128,6 +128,22 @@ class CrossAttentionWithTransformer(nn.Module):
         logits = self.classifier(x)  # [B, 52]
         return logits
 
+def state_dict_maker(old_state_dict):
+    new_state_dict = {}
+
+    for k, v in old_state_dict.items():
+        # Remove any keys containing "manet" (full removal)
+        if "manet_52_model" in k:
+            continue
+
+        # Remove "leg_hand_manet_backbone_model." prefix if present
+        if k.startswith("leg_hand_manet_backbone_model."):
+            new_key = k.replace("leg_hand_manet_backbone_model.", "")
+        else:
+            new_key = k
+
+        new_state_dict[new_key] = v
+    return new_state_dict
     
 @MULTIMODAL.register_module()
 class MultiBranchModel(nn.Module):
@@ -160,16 +176,36 @@ class MultiBranchModel(nn.Module):
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
-        checkpoint = torch.load(main_model.pretrained, map_location='cpu')
+        checkpoint_main = torch.load(main_model.pretrained, map_location='cpu')
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
-        self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
-        load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
-        load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
-        load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
-        load_checkpoint(self.body_hand_model, body_hand_model.pretrained, map_location='cpu')
-        load_checkpoint(self.head_hand_model, head_hand_model.pretrained, map_location='cpu')
-        load_checkpoint(self.leg_hand_model, leg_hand_model.pretrained, map_location='cpu')
+        # for k,v in state_dict_maker(checkpoint["state_dict"]).items():
+        #     print(k,v)
+        self.main_model.load_state_dict(state_dict_maker(checkpoint_main["state_dict"]), strict=False)
+        checkpoint_body_head= torch.load(body_head_model.pretrained, map_location='cpu')
+        self.body_head_model.load_state_dict(state_dict_maker(checkpoint_body_head["state_dict"]), strict=False)
+        
+        checkpoint_upper_limb= torch.load(upper_limb_model.pretrained, map_location='cpu')
+        self.upper_limb_model.load_state_dict(state_dict_maker(checkpoint_upper_limb["state_dict"]), strict=False)
+        
+        checkpoint_lower_limb= torch.load(lower_limb_model.pretrained, map_location='cpu')
+        self.lower_limb_model.load_state_dict(state_dict_maker(checkpoint_lower_limb["state_dict"]), strict=False)
+        
+        
+        checkpoint_body_hand_model= torch.load(body_hand_model.pretrained, map_location='cpu')
+        self.body_hand_model.load_state_dict(state_dict_maker(checkpoint_body_hand_model["state_dict"]), strict=False)
+        
+        checkpoint_head_hand_model= torch.load(head_hand_model.pretrained, map_location='cpu')
+        self.head_hand_model.load_state_dict(state_dict_maker(checkpoint_head_hand_model["state_dict"]), strict=False)
+        
+        checkpoint_leg_hand_model= torch.load(leg_hand_model.pretrained, map_location='cpu')
+        self.leg_hand_model.load_state_dict(state_dict_maker(checkpoint_leg_hand_model["state_dict"]), strict=False)
+        # load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.body_hand_model, body_hand_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.head_hand_model, head_hand_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.leg_hand_model, leg_hand_model.pretrained, map_location='cpu')
         load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
         #  super().__init__()
         self.num_classes = num_classes
@@ -239,6 +275,11 @@ class MultiBranchModel(nn.Module):
         B=imgs.shape[0]
         T=imgs.shape[1]
         
+        out_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+            # out_manet_model=self.scale_manet_52_features(out_manet_model)
+        out_manet_model_copy = out_manet_model.view(B, T, 1, 2048)
+        videomae_features=out_manet_model_copy
+        
         out_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
         # out_main=self.main_model_linear(out_main)
@@ -260,8 +301,8 @@ class MultiBranchModel(nn.Module):
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
         out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
@@ -483,6 +524,8 @@ class MultiBranchModel(nn.Module):
         label = data_batch['label']
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
+        B=imgs.shape[0]
+        T=imgs.shape[1]
         
         # imgs = data_batch['imgs']
         # label = data_batch['label']
@@ -490,6 +533,10 @@ class MultiBranchModel(nn.Module):
         # videomae_features=data_batch['videomae_features']
         # print("Imges shape",imgs.shape)
         
+        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+            # out_manet_model=self.scale_manet_52_features(out_manet_model)
+        out_manet_model_copy = out_manet_model.view(B, T, 1, 2048)
+        videomae_features=out_manet_model_copy
         
         out_main,cls_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
@@ -515,7 +562,7 @@ class MultiBranchModel(nn.Module):
         out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
         
@@ -582,8 +629,8 @@ class MultiBranchModel(nn.Module):
         # weighted_expert_outputs = expert_outputs_stacked
         # final_logits = weighted_expert_outputs.sum(dim=1)
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
-        B=imgs.shape[0]
-        T=imgs.shape[1]
+       
+        
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits
@@ -673,6 +720,8 @@ class MultiBranchModel(nn.Module):
         label = data_batch['label']
         emb=data_batch['emb']
         videomae_features=data_batch['videomae_features']
+        B=imgs.shape[0]
+        T=imgs.shape[1]
         
         # imgs = data_batch['imgs']
         # label = data_batch['label']
@@ -680,6 +729,10 @@ class MultiBranchModel(nn.Module):
         # videomae_features=data_batch['videomae_features']
         # print("Imges shape",imgs.shape)
         
+        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+            # out_manet_model=self.scale_manet_52_features(out_manet_model)
+        out_manet_model_copy = out_manet_model.view(B, T, 1, 2048)
+        videomae_features=out_manet_model_copy
         
         out_main,cls_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
         # print("Out main",out_main.shape)
@@ -705,7 +758,7 @@ class MultiBranchModel(nn.Module):
         out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
         
@@ -772,8 +825,8 @@ class MultiBranchModel(nn.Module):
         # weighted_expert_outputs = expert_outputs_stacked
         # final_logits = weighted_expert_outputs.sum(dim=1)
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
-        B=imgs.shape[0]
-        T=imgs.shape[1]
+       
+        
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits

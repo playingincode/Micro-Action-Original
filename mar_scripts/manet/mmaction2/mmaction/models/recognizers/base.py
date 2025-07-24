@@ -393,13 +393,13 @@ class BaseRecognizer_ours(nn.Module, metaclass=ABCMeta):
         # record the source of the backbone
         # self.norm_layer = nn.LayerNorm(eps=1e-5)
         self.backbone_from = 'mmaction2'
-        self.attn = nn.MultiheadAttention(embed_dim=1408, num_heads=8, batch_first=False)
-        self.SGP_block=SGPBlock(1408,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
-        self.SGP_block_2 = SGPBlock(1408, 1, n_ds_stride=2, k=1.5, n_hidden=768, init_conv_vars=0)
-        self.Global_Relational_Block = Global_Relational_Block(1408, num_heads=4)
+        self.attn = nn.MultiheadAttention(embed_dim=2048, num_heads=8, batch_first=False)
+        self.SGP_block=SGPBlock(2048,1,1,k=1.5,n_hidden=768,init_conv_vars=0)
+        self.SGP_block_2 = SGPBlock(2048, 1, n_ds_stride=2, k=1.5, n_hidden=768, init_conv_vars=0)
+        self.Global_Relational_Block = Global_Relational_Block(2048, num_heads=4)
 
-        self.norm1=TriDetLayerNorm(1408)
-        self.norm2=TriDetLayerNorm(1408)
+        self.norm1=TriDetLayerNorm(2048)
+        self.norm2=TriDetLayerNorm(2048)
 
         if backbone['type'].startswith('mmcls.'):
             
