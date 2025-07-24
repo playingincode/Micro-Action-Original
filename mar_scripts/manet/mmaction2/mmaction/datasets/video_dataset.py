@@ -37,7 +37,7 @@ class VideoDataset(BaseDataset):
     """
 
     def __init__(self, ann_file, pipeline, start_index=0, **kwargs):
-        self.embeddings=np.load("./manet/1214_new_mean_Vectors.npy")
+        self.embeddings=np.load("/data/stars/user/npoddar/mpii_group_interaction_embeddings.npy")
         super().__init__(ann_file, pipeline, start_index=start_index, **kwargs)
         
 
@@ -94,9 +94,9 @@ class VideoDataset(BaseDataset):
                     #     # label=label-38
                     # # else:
                     # #     continue
-                    # elif 48 <= label <= 51:
-                    #     label=5
-                    #     emb=self.embeddings[48]
+                    # if 17 <= label <= 18:
+                    #     label=label
+                        # emb=self.embeddings[48]
                         # label=label-48
                     # else:
                     #     continue
