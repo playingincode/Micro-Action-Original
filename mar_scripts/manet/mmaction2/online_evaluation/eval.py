@@ -9,9 +9,9 @@ import zipfile
 import csv
 import numpy as np
 
-pickle_file_path = 'online_evaluation/test_result_pcan.pickle'
-pred_file_path = 'online_evaluation/prediction.csv'
-zip_file_path = 'online_evaluation/submission.zip'
+pickle_file_path = '/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/online_evaluation/result_val_new_loss_added.pickle'
+pred_file_path = 'online_evaluation/prediction_our_model_with_new_loss.csv'
+zip_file_path = 'online_evaluation/submission_with_new_loss.zip'
 
 def fine2coarse(x):
     if x <= 4:
