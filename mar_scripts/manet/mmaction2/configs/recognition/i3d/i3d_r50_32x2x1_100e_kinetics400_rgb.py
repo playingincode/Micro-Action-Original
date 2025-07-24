@@ -79,7 +79,7 @@ data = dict(
         data_prefix=data_root_val,
         pipeline=test_pipeline))
 evaluation = dict(
-    interval=5, metrics=['top_k_accuracy', 'mean_class_accuracy'])
+    interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 
 # runtime settings
 checkpoint_config = dict(interval=5)
