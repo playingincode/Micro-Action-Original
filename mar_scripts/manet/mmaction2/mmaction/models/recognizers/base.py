@@ -314,8 +314,10 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
         """
         imgs = data_batch['imgs']
         label = data_batch['label']
-        emb=data_batch['emb']
-        videomae_features=data_batch['videomae_features']
+        # emb=data_batch['emb']
+        # videomae_features=data_batch['videomae_features']
+        emb=None
+        videomae_features=None
 
         aux_info = {}
         for item in self.aux_info:
