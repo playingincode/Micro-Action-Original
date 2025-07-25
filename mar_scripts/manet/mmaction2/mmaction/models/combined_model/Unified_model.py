@@ -116,7 +116,7 @@ class CrossAttentionWithTransformer(nn.Module):
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
         out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        # x=x+out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
