@@ -110,6 +110,7 @@ class CrossAttentionWithTransformer(nn.Module):
         # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
         # x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
         x = expert_outputs.mean(dim=1)  # [B*T, 1408]
+        
         # print("After cross attention",x.shape)
         # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
         # fused=out_manet_model+
@@ -399,7 +400,8 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        # loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
