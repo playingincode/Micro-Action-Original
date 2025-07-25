@@ -135,6 +135,7 @@ class RawframeDataset(BaseDataset):
                 if self.data_prefix is not None:
                     frame_dir = osp.join(self.data_prefix, frame_dir)
                 video_info['frame_dir'] = frame_dir
+                video_info['filename'] = frame_dir
                 idx += 1
                 if self.with_offset:
                     # idx for offset and total_frames
@@ -146,6 +147,8 @@ class RawframeDataset(BaseDataset):
                     video_info['total_frames'] = int(line_split[idx])
                     idx += 1
                 # idx for label[s]
+                # print("This line contains intergers",])
+                # print(idx)
                 label = [int(x) for x in line_split[idx:]]
                 assert label, f'missing label in line: {line}'
                 if self.multi_class:

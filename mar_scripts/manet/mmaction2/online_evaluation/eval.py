@@ -9,9 +9,9 @@ import zipfile
 import csv
 import numpy as np
 
-pickle_file_path = 'online_evaluation/test_result_manet.pickle'
-pred_file_path = 'online_evaluation/prediction.csv'
-zip_file_path = 'online_evaluation/submission.zip'
+pickle_file_path = 'online_evaluation/result_val_new_loss_added.pickle'
+pred_file_path = 'online_evaluation/prediction_with_loss_added.csv'
+zip_file_path = 'online_evaluation/prediction_with_loss_added.zip'
 
 def fine2coarse(x):
     if x <= 4:
@@ -32,7 +32,7 @@ def fine2coarse(x):
 with open(pickle_file_path, 'rb') as file:
     datas = pickle.load(file)
 
-with open('./data/ma52/test_list_videos.txt', 'r') as f:
+with open('./data/ma52/val_list_videos.txt', 'r') as f:
     file_names = [line.strip().split()[0] for line in f.readlines()]
 
 with open(pred_file_path, 'w', newline='') as f:

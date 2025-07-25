@@ -62,7 +62,10 @@ class VideoDataset(BaseDataset):
                     #     label=label
                     #     label=label
                     #     emb=self.embeddings[label]
+                    # if label!=17:
+                    #     continue
                         
+                            
                         
                   
 
