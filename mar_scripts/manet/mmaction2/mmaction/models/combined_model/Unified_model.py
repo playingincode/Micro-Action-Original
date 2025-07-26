@@ -98,7 +98,7 @@ class CrossAttentionWithTransformer(nn.Module):
             activation='gelu'
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
-     
+        self.expert_combiner = nn.Linear(6, 1, bias=False) 
         self.classifier = nn.Linear(d_model, 52)
 
     def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
@@ -109,7 +109,9 @@ class CrossAttentionWithTransformer(nn.Module):
         # Step 1: Cross-attention per time step
         # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
         # x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
-        x = expert_outputs.mean(dim=1)  # [B*T, 1408]
+        expert_outputs = expert_outputs.permute(0, 2, 1)
+        x = self.expert_combiner(expert_outputs).squeeze(-1)
+        # x = expert_outputs.mean(dim=1)  # [B*T, 1408]
         # print("After cross attention",x.shape)
         # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
         # fused=out_manet_model+

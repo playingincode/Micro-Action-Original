@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu59.inria.fr'
+#OAR -p gpu='YES' and host='nefgpu56.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name all_experts_without_cross_attention_with_pcan_idea
+#OAR --name all_experts_without_cross_attention_with_linear_projection
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
