@@ -14,18 +14,19 @@ import numpy as np
 def fine2coarse(x):
     # if x <= 4:
     #     return 0
-    if 0 <= x <= 10:
+    label_first_expert = [0, 1, 2, 3, 10, 13]
+    label_second_expert=[4,5,6]
+    label_third_expert=[8,9,16]
+    label_fourth_expert=[7,11,12,14,15,17,18]
+    
+    if x in label_first_expert:
         return 0
-    elif 11 <= x <= 23:
+    elif x in label_second_expert:
         return 1
-    elif 24 <= x <= 31:
+    elif x in label_third_expert:
         return 2
-    elif 32 <= x <= 37:
+    elif x in label_fourth_expert:
         return 3
-    elif 38 <= x <= 47:
-        return 4
-    else:
-        return 5
     
 class CrossAttention(nn.Module):
     def __init__(self, d_model=1408, d_k=32):
@@ -65,7 +66,7 @@ class TreeLoss(nn.Module):
         pred_coarse=self.sig(pred_coarse)
         pred_fine=self.sig(pred_fine)
         pred_fusion=torch.cat((pred_coarse,pred_fine),dim=1)
-        labels_fine=labels_fine+6
+        labels_fine=labels_fine+4
         index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)
         joint = torch.exp(index)
         z = torch.sum(joint, dim=0)
@@ -76,11 +77,11 @@ class TreeLoss(nn.Module):
         return torch.mean(loss)
     
     def generateStateSpace(self):
-        stat_list = np.eye(58)
-        for i in range(6, 58):
+        stat_list = np.eye(23)
+        for i in range(6, 23):
             temp=stat_list[i]
             index=np.where(temp>0)[0]
-            coarse=fine2coarse(int(index)-6)
+            coarse=fine2coarse(int(index)-4)
             stat_list[i][coarse]=1 
         stateSpace = torch.tensor(stat_list)
         return stateSpace
@@ -99,7 +100,7 @@ class CrossAttentionWithTransformer(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
      
-        self.classifier = nn.Linear(d_model, 52)
+        self.classifier = nn.Linear(d_model, 19)
 
     def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
         """
@@ -256,12 +257,142 @@ class MultiBranchModel(nn.Module):
         out_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
-        out_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # print(out_head_hand)
-        out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
+        
+        
+        # out_main,cls_score_main = self.main_model(imgs, label,emb, videomae_features,**kwargs)
+        # # print("Out main",out_main.shape)
+        # # print(cls_score_main)
+        # # out_main=self.main_model_linear(out_main)
+        # # print("Out main",out_main)
+        # # print(out_main)
+        # out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_body_head=self.body_head_model_linear(out_body_head)
+        # # print("out_body_head",out_body_head.shape)
+        # out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
+        # # print(out_upper_limb)
+        # out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
+        # # print(out_lower_limb)
+        # out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_body_hand=self.body_hand_model_linear(out_body_hand)
+        # # print(out_body_hand)
+        # # out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # # # out_head_hand=self.head_hand_model_linear(out_head_hand)
+        # # # print(out_head_hand)
+        # # out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        
+        # out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
+        
+        
+        
+        for name, param in self.manet_52_model.named_parameters():
+            if param.requires_grad:
+                print(f"[WARNING] {name} is still trainable!")
+        
+        
+        # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
+        
+        
+        # print("emb_score_main:", emb_score_main.shape)
+        # print("emb_score_body_head:", emb_score_body_head.shape)
+        # print("emb_score_upper_limb:", emb_score_upper_limb.shape)
+        # print("emb_score_lower_limb:", emb_score_lower_limb.shape)
+        # print("emb_score_body_hand:", emb_score_body_hand.shape)
+        # print("emb_score_head_hand:", emb_score_head_hand.shape)
+        # print("emb_score_leg_hand:", emb_score_leg_hand.shape)
+        
+        # emb_score_0 = emb_score_body_head
+        # emb_score_1 = emb_score_upper_limb
+        # emb_score_2 = emb_score_lower_limb
+        # emb_score_3 = emb_score_body_hand
+        # # emb_score_4 = emb_score_head_hand
+        # # emb_score_5 = emb_score_leg_hand
+        # # print(out_leg_hand)
+        # emb_scores = torch.stack([
+        #     emb_score_0,
+        #     emb_score_1,
+        #     emb_score_2,
+        #     emb_score_3,
+        # ], dim=1)
+        # weights = F.softmax(out_main, dim=1) 
+        gate_weights = torch.softmax(out_main, dim=1)
+        device = out_main.device
+        num_classes = 52
+        # print("Weights",weights)
+        # expert_class_indices = [
+        #     list(range(0, 11)),    # Expert 0
+        #     list(range(11, 24)),   # Expert 1
+        #     list(range(24, 32)),   # Expert 2
+        #     list(range(32, 38)),   # Expert 3
+        #     list(range(38, 48)),   # Expert 4
+        #     list(range(48, 52)),   # Expert 5
+        # ]
+        
+        expert_class_indices = [
+            [0, 1, 2, 3, 10, 13],              # Expert 0
+            [4, 5, 6],                         # Expert 1
+            [8, 9, 16],                        # Expert 2
+            [7, 11, 12, 14, 15, 17, 18]        # Expert 3
+        ]
+        # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
+        expert_outputs_stacked = torch.stack([
+            out_body_head,
+            out_upper_limb,
+            out_lower_limb,
+            out_body_hand,
+        ], dim=1)  # each is [B, 52], 6, D]
+        # weights = weights.unsqueeze(-1)
+        # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
+        # weights = weights.unsqueeze(-1)
+        # weighted_expert_outputs = gate_weights.unsqueeze(-1) * expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
+        # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
+        # weights = weights.unsqueeze(-1)
+        # weighted_expert_outputs = expert_outputs_stacked
+        # final_logits = weighted_expert_outputs.sum(dim=1)
+        # print(f"x shape before view: {expert_outputs_stacked.shape}")
+        B=imgs.shape[0]
+        T=imgs.shape[1]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
+
+# 2. Predict class from logits
+        # class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
+        # predicted_class = class_probs.argmax(dim=1)       # [B]
+
+        # # 3. Map predicted class to expert
+        # class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        # for expert_id, indices in enumerate(expert_class_indices):
+        #     class_to_expert_map[indices] = expert_id
+        # gt_labels = label.squeeze()
+        # responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
+
+        # # 4. Extract correct embedding score from `emb_scores`
+        # batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
+        # expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+
+        # # Loss
+        # loss = dict()
+        
+
+        # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
+        # loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main, **kwargs)
+        # loss.update(loss_cls)
+        # loss, log_vars = self._parse_losses(loss)
+
+        # outputs = dict(
+        #     loss=loss,
+        #     log_vars=log_vars,
+        #     num_samples=len(label)  # safer than data_batch
+        # )
+        # return outputs
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
@@ -290,27 +421,27 @@ class MultiBranchModel(nn.Module):
         #     emb_score_5
         # ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
-        gate_weights = torch.softmax(out_main, dim=1)
-        device = out_main.device
-        num_classes = 52
-        # print("Weights",weights)
-        expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
-        ]
-        # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
-        expert_outputs_stacked = torch.stack([
-            out_body_head,
-            out_upper_limb,
-            out_lower_limb,
-            out_body_hand,
-            out_head_hand,
-            out_leg_hand
-        ], dim=1)  # each is [B, 52], 6, D]
+        # gate_weights = torch.softmax(out_main, dim=1)
+        # device = out_main.device
+        # num_classes = 52
+        # # print("Weights",weights)
+        # expert_class_indices = [
+        #     list(range(0, 11)),    # Expert 0
+        #     list(range(11, 24)),   # Expert 1
+        #     list(range(24, 32)),   # Expert 2
+        #     list(range(32, 38)),   # Expert 3
+        #     list(range(38, 48)),   # Expert 4
+        #     list(range(48, 52)),   # Expert 5
+        # ]
+        # # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
+        # expert_outputs_stacked = torch.stack([
+        #     out_body_head,
+        #     out_upper_limb,
+        #     out_lower_limb,
+        #     out_body_hand,
+        #     out_head_hand,
+        #     out_leg_hand
+        # ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
         # weights = weights.unsqueeze(-1)
@@ -321,10 +452,10 @@ class MultiBranchModel(nn.Module):
         # weighted_expert_outputs = expert_outputs_stacked
         # final_logits = weighted_expert_outputs.sum(dim=1)
         
-        # 
-        B=imgs.shape[0]
-        T=imgs.shape[1]
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
+        # # 
+        # B=imgs.shape[0]
+        # T=imgs.shape[1]
+        # final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -509,10 +640,10 @@ class MultiBranchModel(nn.Module):
         out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
-        out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        # out_head_hand=self.head_hand_model_linear(out_head_hand)
-        # print(out_head_hand)
-        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_head_hand=self.head_hand_model_linear(out_head_hand)
+        # # print(out_head_hand)
+        # out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
@@ -539,29 +670,34 @@ class MultiBranchModel(nn.Module):
         emb_score_1 = emb_score_upper_limb
         emb_score_2 = emb_score_lower_limb
         emb_score_3 = emb_score_body_hand
-        emb_score_4 = emb_score_head_hand
-        emb_score_5 = emb_score_leg_hand
+        # emb_score_4 = emb_score_head_hand
+        # emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
         emb_scores = torch.stack([
             emb_score_0,
             emb_score_1,
             emb_score_2,
             emb_score_3,
-            emb_score_4,
-            emb_score_5
         ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
         device = out_main.device
         num_classes = 52
         # print("Weights",weights)
+        # expert_class_indices = [
+        #     list(range(0, 11)),    # Expert 0
+        #     list(range(11, 24)),   # Expert 1
+        #     list(range(24, 32)),   # Expert 2
+        #     list(range(32, 38)),   # Expert 3
+        #     list(range(38, 48)),   # Expert 4
+        #     list(range(48, 52)),   # Expert 5
+        # ]
+        
         expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
+            [0, 1, 2, 3, 10, 13],              # Expert 0
+            [4, 5, 6],                         # Expert 1
+            [8, 9, 16],                        # Expert 2
+            [7, 11, 12, 14, 15, 17, 18]        # Expert 3
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
@@ -569,8 +705,6 @@ class MultiBranchModel(nn.Module):
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
-            out_head_hand,
-            out_leg_hand
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -699,10 +833,10 @@ class MultiBranchModel(nn.Module):
         out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
-        out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        # out_head_hand=self.head_hand_model_linear(out_head_hand)
-        # print(out_head_hand)
-        out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_head_hand=self.head_hand_model_linear(out_head_hand)
+        # # print(out_head_hand)
+        # out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
         out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, videomae_features,**kwargs)
         out_manet_model=self.scale_manet_52_features(out_manet_model)
@@ -729,29 +863,34 @@ class MultiBranchModel(nn.Module):
         emb_score_1 = emb_score_upper_limb
         emb_score_2 = emb_score_lower_limb
         emb_score_3 = emb_score_body_hand
-        emb_score_4 = emb_score_head_hand
-        emb_score_5 = emb_score_leg_hand
+        # emb_score_4 = emb_score_head_hand
+        # emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
         emb_scores = torch.stack([
             emb_score_0,
             emb_score_1,
             emb_score_2,
             emb_score_3,
-            emb_score_4,
-            emb_score_5
         ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
         device = out_main.device
         num_classes = 52
         # print("Weights",weights)
+        # expert_class_indices = [
+        #     list(range(0, 11)),    # Expert 0
+        #     list(range(11, 24)),   # Expert 1
+        #     list(range(24, 32)),   # Expert 2
+        #     list(range(32, 38)),   # Expert 3
+        #     list(range(38, 48)),   # Expert 4
+        #     list(range(48, 52)),   # Expert 5
+        # ]
+        
         expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
+            [0, 1, 2, 3, 10, 13],              # Expert 0
+            [4, 5, 6],                         # Expert 1
+            [8, 9, 16],                        # Expert 2
+            [7, 11, 12, 14, 15, 17, 18]        # Expert 3
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
@@ -759,8 +898,6 @@ class MultiBranchModel(nn.Module):
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
-            out_head_hand,
-            out_leg_hand
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
