@@ -121,7 +121,7 @@ class CrossAttentionWithTransformer(nn.Module):
         x=x+out_manet_model
 
         # Step 3: Temporal modeling
-        x = self.transformer(x)  # [B, T, 1408]
+        # x = self.transformer(x)  # [B, T, 1408]
 
         # Step 4: Temporal pooling (mean pooling)
         x = x.mean(dim=1)  # [B, 1408]
