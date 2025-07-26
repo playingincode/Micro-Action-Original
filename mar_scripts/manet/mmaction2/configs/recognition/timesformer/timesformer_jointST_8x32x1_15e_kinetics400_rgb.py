@@ -121,4 +121,4 @@ total_epochs = 500
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timesformer_mpii_running'
+work_dir = './work_dirs/timesformer_on_mpii_again'
