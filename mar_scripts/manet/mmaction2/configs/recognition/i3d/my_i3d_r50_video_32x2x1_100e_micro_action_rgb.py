@@ -81,4 +81,4 @@ data = dict(
         pipeline=test_pipeline))
 
 # runtime settings
-work_dir = './work_dirs/I3d_MPIIGroupInteraction_evaluation_changed_to_single_intervals_again/'
+work_dir = './work_dirs/I3d_MPIIGroupInteraction_final/'

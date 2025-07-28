@@ -82,5 +82,5 @@ evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
 
 # runtime settings
-checkpoint_config = dict(interval=5)
+checkpoint_config = dict(interval=1)
 work_dir = './work_dirs/i3d_r50_32x2x1_100e_kinetics400_rgb/'
