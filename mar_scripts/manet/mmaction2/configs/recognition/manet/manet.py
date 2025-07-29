@@ -99,5 +99,5 @@ optimizer = dict(
     lr=0.01/8, 
 )
 # runtime settings
-checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea'
+checkpoint_config = dict(interval=1)
+work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea_again'

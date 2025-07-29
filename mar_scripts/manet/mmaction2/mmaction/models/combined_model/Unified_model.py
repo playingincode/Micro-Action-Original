@@ -78,7 +78,7 @@ class TreeLoss(nn.Module):
     
     def generateStateSpace(self):
         stat_list = np.eye(23)
-        for i in range(6, 23):
+        for i in range(4, 23):
             temp=stat_list[i]
             index=np.where(temp>0)[0]
             coarse=fine2coarse(int(index)-4)
