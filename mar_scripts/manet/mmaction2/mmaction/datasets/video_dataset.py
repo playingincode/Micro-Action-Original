@@ -98,12 +98,13 @@ class VideoDataset(BaseDataset):
                     #     # label=label-38
                     # # else:
                     # #     continue
-                    # elif 48 <= label <= 51:
-                    #     label=5
-                    #     emb=self.embeddings[48]
-                        # label=label-48
-                    # else:
-                    #     continue
+                    # if not 18<= label <= 18:
+                    #     # label=5
+                    #     # emb=self.embeddings[48]
+                    #     # label=label-48
+                        
+                    # # else:
+                        # continue
                 if self.data_prefix is not None:
                     filename = osp.join(self.data_prefix, filename)
                 # print(self.embeddings.shape)

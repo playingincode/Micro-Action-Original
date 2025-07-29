@@ -32,20 +32,21 @@ except (ImportError, ModuleNotFoundError):
 
 
 def fine2coarse(x):
-    if x <= 4:
+    # if x <= 4:
+    #     return 0
+    label_first_expert = [0, 1, 2, 3, 10, 13]
+    label_second_expert=[4,5,6]
+    label_third_expert=[8,9,16]
+    label_fourth_expert=[7,11,12,14,15,17,18]
+    
+    if x in label_first_expert:
         return 0
-    elif 5 <= x <= 10:
+    elif x in label_second_expert:
         return 1
-    elif 11 <= x <= 23:
+    elif x in label_third_expert:
         return 2
-    elif 24 <= x <= 31:
+    elif x in label_fourth_expert:
         return 3
-    elif 32 <= x <= 37:
-        return 4
-    elif 38 <= x <= 47:
-        return 5
-    else:
-        return 6
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -417,7 +418,7 @@ def main():
                               **cfg.data.get('test_dataloader', {}))
     data_loader = build_dataloader(dataset, **dataloader_setting)
 
-    target_dir="./work_dirs/manet/"
+    target_dir="./work_dirs/manet_timesformer/"
 
     outputs = inference_pytorch(args, cfg, distributed, data_loader)
 
