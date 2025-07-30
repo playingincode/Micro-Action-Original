@@ -140,3 +140,4 @@ mmaction/tools/*
 !demo/*.ipynb
 mmaction/.mim
 online_evaluation/*
+confusion_matrix*
