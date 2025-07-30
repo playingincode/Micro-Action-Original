@@ -12,7 +12,7 @@ from mmcv.utils import print_log
 from torch.utils.data import Dataset
 
 from ..core import (mean_average_precision, mean_class_accuracy,
-                    mmit_mean_average_precision, top_k_accuracy)
+                    mmit_mean_average_precision, top_k_accuracy,top_k_accuracy_subset)
 from .pipelines import Compose
 import os
 
@@ -181,7 +181,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         metrics = metrics if isinstance(metrics, (list, tuple)) else [metrics]
         allowed_metrics = [
             'top_k_accuracy', 'mean_class_accuracy', 'mean_average_precision',
-            'mmit_mean_average_precision'
+            'mmit_mean_average_precision','top_k_accuracy_subset'
         ]
 
         for metric in metrics:
@@ -213,6 +213,12 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
                     eval_results[f'top{k}_acc'] = acc
                     log_msg.append(f'\ntop{k}_acc\t{acc:.4f}')
                 log_msg = ''.join(log_msg)
+                print_log(log_msg, logger=logger)
+                continue
+            if metric=='top_k_accuracy_subset':
+                top_k_11 = top_k_accuracy_subset(results, gt_labels)
+                eval_results['top_k_accuracy_subset'] = top_k_11[0]
+                log_msg = f'\ntop_k_accuracy_subset\t{top_k_11[0]:.4f}'
                 print_log(log_msg, logger=logger)
                 continue
 

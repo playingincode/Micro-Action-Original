@@ -101,8 +101,11 @@ class VideoDataset(BaseDataset):
                     #     # if 0 <= label <= 10:
                     #     label = 0
                     #     emb = np.mean(self.embeddings[0:11], axis=0)
-                    # elif 11 <= label <= 23:
-                    #     label = 1
+                    # if not 0 <= label <= 10:
+                    #     # label=label
+                    #     continue
+                        # emb=self.embeddings[label]
+                        # label=label-11
                     #     emb = np.mean(self.embeddings[11:24], axis=0)
                     # elif 24 <= label <= 31:
                     #     label = 2

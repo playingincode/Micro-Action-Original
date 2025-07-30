@@ -152,6 +152,37 @@ def top_k_accuracy(scores, labels, topk=(1, )):
 
     return res
 
+def top_k_accuracy_subset(scores, labels, target_label_range=range(0, 11), topk=(1,)):
+    """Calculate top k accuracy score for a subset of labels.
+
+    Args:
+        scores (list[np.ndarray] or np.ndarray): Prediction scores for each class.
+        labels (list[int] or np.ndarray): Ground truth labels.
+        target_label_range (iterable): Subset of label indices to include.
+        topk (tuple[int]): K value(s) for top_k_accuracy. Default: (1, ).
+
+    Returns:
+        list[float]: Top k accuracy scores for each k, calculated only for subset.
+    """
+    scores = np.array(scores)
+    labels = np.array(labels)
+
+    mask = np.isin(labels, target_label_range)
+    if not np.any(mask):
+        return [0.0 for _ in topk]
+
+    filtered_scores = scores[mask]
+    filtered_labels = labels[mask][:, np.newaxis]
+
+    res = []
+    for k in topk:
+        max_k_preds = np.argsort(filtered_scores, axis=1)[:, -k:][:, ::-1]
+        match_array = np.logical_or.reduce(max_k_preds == filtered_labels, axis=1)
+        topk_acc_score = match_array.sum() / match_array.shape[0]
+        res.append(topk_acc_score)
+
+    return res
+
 
 def mmit_mean_average_precision(scores, labels):
     """Mean average precision for multi-label recognition. Used for reporting

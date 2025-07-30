@@ -27,6 +27,33 @@ def fine2coarse(x):
     else:
         return 5
     
+    
+def top_k_accuracy_subset(cls_score, labels, target_label_range=range(0, 11)):
+    """
+    Compute Top-1 and Top-5 accuracy for a subset of labels (e.g., 0–11).
+
+    Args:
+        cls_score (torch.Tensor): [B, num_classes]
+        labels (torch.Tensor): [B]
+        target_label_range (iterable): subset of label indices to consider
+
+    Returns:
+        tuple: (top1_acc, top5_acc)
+    """
+    cls_score = cls_score.detach().cpu().numpy()
+    labels = labels.detach().cpu().numpy()
+
+    mask = np.isin(labels, target_label_range)
+    
+    if not np.any(mask):
+        return 0.0, 0.0  # No matching labels
+
+    filtered_scores = cls_score[mask]
+    filtered_labels = labels[mask]
+
+    top1, top5 = top_k_accuracy(filtered_scores, filtered_labels, topk=(1, 5))
+    return top1, top5
+    
 class CrossAttention(nn.Module):
     def __init__(self, d_model=1408, d_k=32):
         super().__init__()
@@ -395,7 +422,9 @@ class MultiBranchModel(nn.Module):
         elif self.multi_class and self.label_smooth_eps != 0:
             labels = ((1 - self.label_smooth_eps) * labels +
                       self.label_smooth_eps / self.num_classes)
-
+        
+        # top1_acc,top5_acc=top_k_accuracy_subset(cls_score,labels)
+        # print(top1_acc,top5_acc)
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
         loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
@@ -497,7 +526,7 @@ class MultiBranchModel(nn.Module):
         # out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
         # print(out_main)
-        out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_head=self.body_head_model_linear(out_body_head)
         # print("out_body_head",out_body_head.shape)
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
@@ -535,7 +564,7 @@ class MultiBranchModel(nn.Module):
         # print("emb_score_head_hand:", emb_score_head_hand.shape)
         # print("emb_score_leg_hand:", emb_score_leg_hand.shape)
         
-        emb_score_0 = emb_score_body_head
+        # emb_score_0 = emb_score_body_head
         emb_score_1 = emb_score_upper_limb
         emb_score_2 = emb_score_lower_limb
         emb_score_3 = emb_score_body_hand
@@ -543,7 +572,7 @@ class MultiBranchModel(nn.Module):
         emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
         emb_scores = torch.stack([
-            emb_score_0,
+            # emb_score_0,
             emb_score_1,
             emb_score_2,
             emb_score_3,
@@ -565,7 +594,7 @@ class MultiBranchModel(nn.Module):
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
-            out_body_head,
+            # out_body_head,
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
@@ -599,7 +628,17 @@ class MultiBranchModel(nn.Module):
 
         # 4. Extract correct embedding score from `emb_scores`
         batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
-        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # expert_embedding_score={}
+        embedding_dim_size = emb_scores.shape[-1]
+        expert_embedding_score = torch.zeros((B, embedding_dim_size), device=emb_scores.device)
+        for i in range(B):
+            expert_idx = responsible_expert_idx[i].item()
+            if expert_idx!=0:
+                expert_embedding_score[i] = emb_scores[i, expert_idx-1]
+            else:
+                expert_embedding_score[i]=emb[i]
+        # expert_embedding_score=None
 
         # Loss
         loss = dict()
@@ -687,7 +726,7 @@ class MultiBranchModel(nn.Module):
         # out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
         # print(out_main)
-        out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_body_head,emb_score_body_head = self.body_head_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_head=self.body_head_model_linear(out_body_head)
         # print("out_body_head",out_body_head.shape)
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
@@ -725,7 +764,7 @@ class MultiBranchModel(nn.Module):
         # print("emb_score_head_hand:", emb_score_head_hand.shape)
         # print("emb_score_leg_hand:", emb_score_leg_hand.shape)
         
-        emb_score_0 = emb_score_body_head
+        # emb_score_0 = emb_score_body_head
         emb_score_1 = emb_score_upper_limb
         emb_score_2 = emb_score_lower_limb
         emb_score_3 = emb_score_body_hand
@@ -733,7 +772,7 @@ class MultiBranchModel(nn.Module):
         emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
         emb_scores = torch.stack([
-            emb_score_0,
+            # emb_score_0,
             emb_score_1,
             emb_score_2,
             emb_score_3,
@@ -755,7 +794,7 @@ class MultiBranchModel(nn.Module):
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
-            out_body_head,
+            # out_body_head,
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
@@ -789,7 +828,17 @@ class MultiBranchModel(nn.Module):
 
         # 4. Extract correct embedding score from `emb_scores`
         batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
-        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # expert_embedding_score={}
+        embedding_dim_size = emb_scores.shape[-1]
+        expert_embedding_score = torch.zeros((B, embedding_dim_size), device=emb_scores.device)
+        for i in range(B):
+            expert_idx = responsible_expert_idx[i].item()
+            if expert_idx!=0:
+                expert_embedding_score[i] = emb_scores[i, expert_idx-1]
+            else:
+                expert_embedding_score[i]=emb[i]
+        # expert_embedding_score=None
 
         # Loss
         loss = dict()
