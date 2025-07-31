@@ -249,7 +249,7 @@ def my_evaluate(dataset, results, target_path):
 
     res = top_1_5_accuracy(results, dataset, target_path, lv_result)
 
-def top_k_accuracy_subset(scores, labels, target_label_range=range(0, 11), topk=(1,)):
+def top_k_accuracy_subset(scores, labels, target_label_range=range(48, 52), topk=(1,)):
     """Calculate top k accuracy score for a subset of labels.
 
     Args:
@@ -297,7 +297,24 @@ def lv_evaluate(predictions, labels):
     lv1_f1_micro = f1_score(lv1_labels, lv1_preds, average='micro')
     lv1_f1_macro = f1_score(lv1_labels, lv1_preds, average='macro')
     mean_f1 = (lv2_f1_macro + lv1_f1_macro + lv1_f1_micro + lv2_f1_micro) / 4.0
-    first_11_results=top_k_accuracy_subset(logits,labels)
+    expert_class_indices = [
+            list(range(0, 11)),    # Expert 0
+            list(range(11, 24)),   # Expert 1
+            list(range(24, 32)),   # Expert 2
+            list(range(32, 38)),   # Expert 3
+            list(range(38, 48)),   # Expert 4
+            list(range(48, 52)),   # Expert 5
+        ]
+
+    first_11_results=top_k_accuracy_subset(logits,labels,expert_class_indices[0])
+    second_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[1])
+    third_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[2])
+    fourth_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[3])
+    fifth_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[4])
+    sixth_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[5])
+    # second_13_results=top_k_accuracy_subset(logits,labels,expert_class_indices[1])
+    
+    
     eval_results = {'lv1_acc': accuracy_score(lv1_labels, lv1_preds),
                     'lv2_acc': accuracy_score(labels, predictions),
                     'lv1_f1_micro': lv1_f1_micro,
@@ -305,7 +322,12 @@ def lv_evaluate(predictions, labels):
                     'lv2_f1_micro': lv2_f1_micro,
                     'lv2_f1_macro': lv2_f1_macro,
                     'mean_f1': mean_f1,
-                    'first_11_results':first_11_results}
+                    'fifth_13_results':first_11_results,
+                    'second_13_results':second_13_results,
+                    'third_13_results':third_13_results,
+                    'fourth_13_results':fourth_13_results,
+                    'fifth_13_results':fifth_13_results,
+                    'sixth_13_results':sixth_13_results,}
 
     return eval_results
 
