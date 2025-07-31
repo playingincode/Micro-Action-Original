@@ -11,7 +11,7 @@ module load conda/2020.48-python3.8 cuda/12.2 gcc/9.2.0
 
 # Activate conda environment
 source $(conda info --base)/etc/profile.d/conda.sh
-source activate c|| { echo "Conda environment not found"; exit 1; }
+source activate manet_new_six|| { echo "Conda environment not found"; exit 1; }
 
 # Display python version and path
 python --version

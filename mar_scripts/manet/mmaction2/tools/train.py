@@ -217,7 +217,8 @@ def main():
     
     model = build_model(
         cfg.model)
-    
+    total_params = sum(p.numel() for p in model.parameters())
+    print("Total parameters",total_params)
     # body_head_model = build_model(
     #     cfg.body_head_model,
     #     train_cfg=cfg.get('train_cfg'),
