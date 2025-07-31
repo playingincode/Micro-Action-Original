@@ -209,6 +209,9 @@ def main():
         cfg.model,
         train_cfg=cfg.get('train_cfg'),
         test_cfg=cfg.get('test_cfg'))
+    
+    
+    
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
@@ -239,7 +242,38 @@ def main():
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
     total_params = sum(p.numel() for p in model.parameters())
-    print("Total params ***********************************************************************************",total_params)
+    # print("Total params ***********************************************************************************",total_params)
+    model = model.to('cuda:0')
+    model.train()  # Ensure it's in training mode if loss needs it
+
+    # Get a sample from the dataset
+    sample = datasets[0][0]
+
+    # Move all tensors to CUDA and add batch dimension
+    sample_cuda = {
+        k: v.unsqueeze(0).cuda() if torch.is_tensor(v) else v
+        for k, v in sample.items()
+    }
+
+    # Forward pass
+    output = model(sample_cuda,"hi","bye")
+    print("Output keys:", output.keys())  # Inspect structure
+
+    # Extract loss
+    assert 'loss' in output, "'loss' key not found in model output"
+    loss = output['loss']
+
+    # Backward pass
+    model.zero_grad()
+    loss.backward()
+
+    # Count the number of parameters used in backward
+    used_params = sum(
+        p.numel() for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    )
+    print(f"Trainable & used parameters (backpropagated): {used_params}")
+    exit()
     train_model(
         model,
         datasets,

@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_plain_running'
+work_dir = './work_dirs/manet_plain_running_testing_parameters'

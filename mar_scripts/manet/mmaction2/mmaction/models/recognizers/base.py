@@ -258,6 +258,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
 
     def forward(self, imgs, label,emb, return_loss=True, **kwargs):
         """Define the computation performed at every call."""
+        if isinstance(label, str) and "hi" in label:
+            return self.train_step(imgs,None)
         if kwargs.get('gradcam', False):
             del kwargs['gradcam']
             return self.forward_gradcam(imgs, **kwargs)
@@ -267,8 +269,8 @@ class BaseRecognizer(nn.Module, metaclass=ABCMeta):
             if self.blending is not None:
                 imgs, label = self.blending(imgs, label)
             return self.forward_train(imgs, label,emb, **kwargs)
-
-        return self.forward_test(imgs,label,emb, **kwargs)
+      
+        
 
     def train_step(self, data_batch, optimizer, **kwargs):
         """The iteration step during training.
