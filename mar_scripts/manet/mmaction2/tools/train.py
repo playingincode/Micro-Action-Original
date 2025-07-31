@@ -238,6 +238,8 @@ def main():
             config=cfg.pretty_text)
 
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
+    total_params = sum(p.numel() for p in model.parameters())
+    print("Total params ***********************************************************************************",total_params)
     train_model(
         model,
         datasets,
