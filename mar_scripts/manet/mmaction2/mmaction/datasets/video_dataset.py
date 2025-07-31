@@ -57,6 +57,7 @@ class VideoDataset(BaseDataset):
                     label = list(map(int, label))
                 else:
                     filename, label = line_split
+                    # print(filename)
                     label = int(label)
                     # if 0 <= label <= 10:
                     #     label=0
