@@ -9,9 +9,9 @@ import zipfile
 import csv
 import numpy as np
 
-pickle_file_path = 'online_evaluation/test_result_pcan.pickle'
+pickle_file_path = 'online_evaluation/test_result_our_model_on_ma52_using_average.pickle'
 pred_file_path = 'online_evaluation/prediction.csv'
-zip_file_path = 'online_evaluation/submission.zip'
+zip_file_path = 'online_evaluation/test_result_our_model_on_ma52_using_average.zip'
 
 def fine2coarse(x):
     if x <= 4:
