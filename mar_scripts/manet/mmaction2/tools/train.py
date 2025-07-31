@@ -286,20 +286,37 @@ def main():
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
     total_params = sum(p.numel() for p in model.parameters())
     print("Total parameters************************************",total_params)
-    dummy_input = torch.randn(1, *input_shape).to(device)  # Adjust shape
-    output = model(dummy_input)
+    # dummy_input = torch.randn(1, *input_shape).to(device)  # Adjust shape
+    # datasets[0][0].to('cuda'))
+    model = model.to('cuda:0')
+    model.train()  # Ensure it's in training mode if loss needs it
 
-    # Use a dummy target and loss
-    dummy_target = torch.randint(0, num_classes, (1,)).to(device)
-    criterion = torch.nn.CrossEntropyLoss()
-    loss = criterion(output, dummy_target)
+    # Get a sample from the dataset
+    sample = datasets[0][0]
+
+    # Move all tensors to CUDA and add batch dimension
+    sample_cuda = {
+        k: v.unsqueeze(0).cuda() if torch.is_tensor(v) else v
+        for k, v in sample.items()
+    }
+
+    # Forward pass
+    output = model(sample_cuda)
+    print("Output keys:", output.keys())  # Inspect structure
+
+    # Extract loss
+    assert 'loss' in output, "'loss' key not found in model output"
+    loss = output['loss']
 
     # Backward pass
     model.zero_grad()
     loss.backward()
 
-    # Count parameters that got gradients (i.e., used in backward)
-    used_params = sum(p.numel() for p in model.parameters() if p.requires_grad and p.grad is not None)
+    # Count the number of parameters used in backward
+    used_params = sum(
+        p.numel() for p in model.parameters()
+        if p.requires_grad and p.grad is not None
+    )
     print(f"Trainable & used parameters (backpropagated): {used_params}")
     train_model(
         model,

@@ -339,22 +339,23 @@ class MultiBranchModel(nn.Module):
         # print(final_logits)
         return final_logits
     
-    def forward(self, imgs, label,emb,videomae_features, return_loss=True, **kwargs):
+    def forward(self, data_batch):
         """Define the computation performed at every call."""
         # return_loss=False
         # print("Return loss inside unified model",return_loss)
-        if kwargs.get('gradcam', False):
-            del kwargs['gradcam']
-            return self.forward_gradcam(imgs, **kwargs)
-        if return_loss:
-            return self.forward_train_with_logits(imgs, label,emb,videomae_features, **kwargs)
-            if label is None:
-                raise ValueError('Label should not be None.')
-            if self.blending is not None:
-                imgs, label = self.blending(imgs, label)
+        return self.train_step(data_batch,None)
+        # if kwargs.get('gradcam', False):
+        #     del kwargs['gradcam']
+        #     return self.forward_gradcam(imgs, **kwargs)
+        # if return_loss:
+        #     return self.forward_train_with_logits(imgs, label,emb,videomae_features, **kwargs)
+        #     if label is None:
+        #         raise ValueError('Label should not be None.')
+        #     if self.blending is not None:
+        #         imgs, label = self.blending(imgs, label)
             
-        kwargs['return_loss'] = return_loss
-        return self.forward_test(imgs,label,emb, videomae_features,**kwargs).cpu().numpy()
+        # kwargs['return_loss'] = return_loss
+        # return self.forward_test(imgs,label,emb, videomae_features,**kwargs).cpu().numpy()
  
     def expand_to_52(self,logits, class_indices):
         num_classes = 52
@@ -594,7 +595,9 @@ class MultiBranchModel(nn.Module):
         class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
-        gt_labels = label.squeeze()
+        print(label)
+        # gt_labels = label.squeeze()
+        gt_labels = label.view(-1)
         responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
         # 4. Extract correct embedding score from `emb_scores`
