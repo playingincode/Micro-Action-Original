@@ -425,6 +425,7 @@ class Recognizer2D_ours(BaseRecognizer_ours):
     def _do_train_logits_and_emb_scores(self, imgs,labels,embs_la,videomae_features):
         """Defines the computation performed at every call when evaluation,
         testing and gradcam."""
+        # print(videomae_features)
         batches = videomae_features.shape[0]
         imgs=videomae_features.squeeze(2)
         imgs=imgs.permute(0,2,1)

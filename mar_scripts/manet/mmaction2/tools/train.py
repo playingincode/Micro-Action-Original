@@ -286,6 +286,21 @@ def main():
     test_option = dict(test_last=args.test_last, test_best=args.test_best)
     total_params = sum(p.numel() for p in model.parameters())
     print("Total parameters************************************",total_params)
+    dummy_input = torch.randn(1, *input_shape).to(device)  # Adjust shape
+    output = model(dummy_input)
+
+    # Use a dummy target and loss
+    dummy_target = torch.randint(0, num_classes, (1,)).to(device)
+    criterion = torch.nn.CrossEntropyLoss()
+    loss = criterion(output, dummy_target)
+
+    # Backward pass
+    model.zero_grad()
+    loss.backward()
+
+    # Count parameters that got gradients (i.e., used in backward)
+    used_params = sum(p.numel() for p in model.parameters() if p.requires_grad and p.grad is not None)
+    print(f"Trainable & used parameters (backpropagated): {used_params}")
     train_model(
         model,
         datasets,
