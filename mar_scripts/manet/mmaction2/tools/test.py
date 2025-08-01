@@ -249,6 +249,37 @@ def my_evaluate(dataset, results, target_path):
 
     res = top_1_5_accuracy(results, dataset, target_path, lv_result)
 
+def top_k_accuracy_subset(scores, labels, target_label_range=range(48, 52), topk=(1,)):
+    """Calculate top k accuracy score for a subset of labels.
+
+    Args:
+        scores (list[np.ndarray] or np.ndarray): Prediction scores for each class.
+        labels (list[int] or np.ndarray): Ground truth labels.
+        target_label_range (iterable): Subset of label indices to include.
+        topk (tuple[int]): K value(s) for top_k_accuracy. Default: (1, ).
+
+    Returns:
+        list[float]: Top k accuracy scores for each k, calculated only for subset.
+    """
+    scores = np.array(scores)
+    labels = np.array(labels)
+
+    mask = np.isin(labels, target_label_range)
+    if not np.any(mask):
+        return [0.0 for _ in topk]
+
+    filtered_scores = scores[mask]
+    filtered_labels = labels[mask][:, np.newaxis]
+
+    res = []
+    for k in topk:
+        max_k_preds = np.argsort(filtered_scores, axis=1)[:, -k:][:, ::-1]
+        match_array = np.logical_or.reduce(max_k_preds == filtered_labels, axis=1)
+        topk_acc_score = match_array.sum() / match_array.shape[0]
+        res.append(topk_acc_score)
+
+    return res
+
 def lv_evaluate(predictions, labels):
     # prediction and labels are action-level
     predictions = np.argsort(predictions, axis=1)[:, -1:][:, ::-1]
@@ -264,13 +295,17 @@ def lv_evaluate(predictions, labels):
     lv1_f1_micro = f1_score(lv1_labels, lv1_preds, average='micro')
     lv1_f1_macro = f1_score(lv1_labels, lv1_preds, average='macro')
     mean_f1 = (lv2_f1_macro + lv1_f1_macro + lv1_f1_micro + lv2_f1_micro) / 4.0
-
+    label_first_expert = [0, 1, 2, 3, 10, 13]
+    label_second_expert=[4,5,6]
+    label_third_expert=[8,9,16]
+    label_fourth_expert=[7,11,12,14,15,17,18]
     eval_results = {'lv1_acc': accuracy_score(lv1_labels, lv1_preds),
                     'lv2_acc': accuracy_score(labels, predictions),
                     'lv1_f1_micro': lv1_f1_micro,
                     'lv1_f1_macro': lv1_f1_macro,
                     'lv2_f1_micro': lv2_f1_micro,
                     'lv2_f1_macro': lv2_f1_macro,
+                    'first_expert':top_k_accuracy_subset()
                     'mean_f1': mean_f1}
 
     return eval_results
