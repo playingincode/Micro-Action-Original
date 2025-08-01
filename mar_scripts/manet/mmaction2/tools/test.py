@@ -282,6 +282,7 @@ def top_k_accuracy_subset(scores, labels, target_label_range=range(48, 52), topk
 
 def lv_evaluate(predictions, labels):
     # prediction and labels are action-level
+    logits=predictions
     predictions = np.argsort(predictions, axis=1)[:, -1:][:, ::-1]
     pre=[]
     for i in predictions:
@@ -305,7 +306,10 @@ def lv_evaluate(predictions, labels):
                     'lv1_f1_macro': lv1_f1_macro,
                     'lv2_f1_micro': lv2_f1_micro,
                     'lv2_f1_macro': lv2_f1_macro,
-                    'first_expert':top_k_accuracy_subset()
+                    # 'first_expert':top_k_accuracy_subset(logits,labels,label_first_expert),
+                    # 'second expert':top_k_accuracy_subset(logits,labels,label_second_expert),
+                    # 'third expert':top_k_accuracy_subset(logits,labels,label_third_expert),
+                    'fourth expert':top_k_accuracy_subset(logits,labels,label_fourth_expert),
                     'mean_f1': mean_f1}
 
     return eval_results

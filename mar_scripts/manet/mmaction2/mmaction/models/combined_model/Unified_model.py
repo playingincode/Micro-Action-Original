@@ -347,7 +347,7 @@ class MultiBranchModel(nn.Module):
             out_body_head,
             out_upper_limb,
             out_lower_limb,
-            out_body_hand,
+            # out_body_hand,
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
