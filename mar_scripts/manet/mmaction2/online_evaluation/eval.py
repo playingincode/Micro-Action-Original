@@ -107,8 +107,8 @@ def fine2coarse(x):
 
 
 preds, labels = load_predictions_and_labels(
-pickle_path='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/online_evaluation/test_result_manet.pickle',
-gt_label_file='/data/stars/user/npoddar/val_list_videos_mpII.txt'  # assuming labels are in second column
+pickle_path='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/online_evaluation/all_results_for_ma52_using_manet_testing_new.pickle',
+gt_label_file='/data/stars/user/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/data/ma52/val_list_videos.txt'  # assuming labels are in second column
 )
 # print(preds)
 eval_results = lv_evaluate(preds, labels)
