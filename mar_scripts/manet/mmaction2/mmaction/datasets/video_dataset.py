@@ -58,6 +58,20 @@ class VideoDataset(BaseDataset):
                 else:
                     filename, label = line_split
                     label = int(label)
+                    
+                    label_first_expert = [0, 1, 2, 3, 10, 13]
+                    label_second_expert=[4,5,6]
+                    label_third_expert=[8,9,16]
+                    label_fourth_expert=[7,11,12,14,15,17,18]
+                    
+                    if x in label_first_expert:
+                        return 0
+                    elif x in label_second_expert:
+                        return 1
+                    elif x in label_third_expert:
+                        return 2
+                    elif x in label_fourth_expert:
+                        return 3
                     # if 0 <= label <= 10:
                     #     # label=0
                     #     label=0
