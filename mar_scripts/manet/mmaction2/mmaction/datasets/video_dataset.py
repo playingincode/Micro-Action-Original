@@ -64,14 +64,16 @@ class VideoDataset(BaseDataset):
                     label_third_expert=[8,9,16]
                     label_fourth_expert=[7,11,12,14,15,17,18]
                     
-                    if x in label_first_expert:
-                        return 0
-                    elif x in label_second_expert:
-                        return 1
-                    elif x in label_third_expert:
-                        return 2
-                    elif x in label_fourth_expert:
-                        return 3
+                    if label in label_first_expert:
+                        # index = label_fourth_expert.index(label)
+                        # emb=self.embeddings[label]
+                        # label=index
+                        label=label
+                        emb=self.embeddings[label]
+                        index = label_first_expert.index(label)
+                        label=index
+                    else:
+                        continue
                     # if 0 <= label <= 10:
                     #     # label=0
                     #     label=0
@@ -101,10 +103,10 @@ class VideoDataset(BaseDataset):
                     #     label=label-32
                     # # else:
                     # #     continue
-                    if 38 <= label <= 47:
-                        label=label
-                        emb=self.embeddings[label]
-                        label=label-38
+                    # if 38 <= label <= 47:
+                    #     label=label
+                    #     emb=self.embeddings[label]
+                    #     label=label-38
                     # else:
                     #     continue
                     # if 48 <= label <= 51:
@@ -133,8 +135,8 @@ class VideoDataset(BaseDataset):
                     #     emb = np.mean(self.embeddings[38:48], axis=0)
                     # if 50 <= label <= 51:
                     #     label = label
-                    else:
-                        continue
+                    # else:
+                    #     continue
                     
                         
                 if self.data_prefix is not None:
