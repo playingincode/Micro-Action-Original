@@ -14,18 +14,19 @@ import numpy as np
 def fine2coarse(x):
     # if x <= 4:
     #     return 0
-    if 0 <= x <= 10:
+    label_first_expert = [0, 1, 2, 3, 10, 13]
+    label_second_expert=[4,5,6]
+    label_third_expert=[8,9,16]
+    label_fourth_expert=[7,11,12,14,15,17,18]
+    
+    if x in label_first_expert:
         return 0
-    elif 11 <= x <= 23:
+    elif x in label_second_expert:
         return 1
-    elif 24 <= x <= 31:
+    elif x in label_third_expert:
         return 2
-    elif 32 <= x <= 37:
+    elif x in label_fourth_expert:
         return 3
-    elif 38 <= x <= 47:
-        return 4
-    else:
-        return 5
     
 class CrossAttention(nn.Module):
     def __init__(self, d_model=2048, d_k=32):
@@ -332,25 +333,25 @@ class MultiBranchModel(nn.Module):
         # ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
-        device = out_main.device
-        num_classes = 52
-        # print("Weights",weights)
-        expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
-        ]
+        # device = out_main.device
+        # num_classes = 52
+        # # print("Weights",weights)
+        # expert_class_indices = [
+        #     list(range(0, 11)),    # Expert 0
+        #     list(range(11, 24)),   # Expert 1
+        #     list(range(24, 32)),   # Expert 2
+        #     list(range(32, 38)),   # Expert 3
+        #     list(range(38, 48)),   # Expert 4
+        #     list(range(48, 52)),   # Expert 5
+        # ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
             out_body_head,
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
-            out_head_hand,
-            out_leg_hand
+            # out_head_hand,
+            # out_leg_hand
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -594,8 +595,8 @@ class MultiBranchModel(nn.Module):
             emb_score_1,
             emb_score_2,
             emb_score_3,
-            emb_score_4,
-            emb_score_5
+            # emb_score_4,
+            # emb_score_5
         ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
@@ -603,12 +604,10 @@ class MultiBranchModel(nn.Module):
         num_classes = 52
         # print("Weights",weights)
         expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
+            [0, 1, 2, 3, 10, 13],
+            [4,5,6],
+            [8,9,16],
+            [7,11,12,14,15,17,18],  # Expert 5
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
@@ -616,8 +615,8 @@ class MultiBranchModel(nn.Module):
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
-            out_head_hand,
-            out_leg_hand
+            # out_head_hand,
+            # out_leg_hand
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -638,7 +637,7 @@ class MultiBranchModel(nn.Module):
         predicted_class = class_probs.argmax(dim=1)       # [B]
 
         # 3. Map predicted class to expert
-        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        class_to_expert_map = torch.zeros(19, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
         gt_labels = label.squeeze()
@@ -790,8 +789,8 @@ class MultiBranchModel(nn.Module):
             emb_score_1,
             emb_score_2,
             emb_score_3,
-            emb_score_4,
-            emb_score_5
+            # emb_score_4,
+            # emb_score_5
         ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
@@ -799,12 +798,10 @@ class MultiBranchModel(nn.Module):
         num_classes = 52
         # print("Weights",weights)
         expert_class_indices = [
-            list(range(0, 11)),    # Expert 0
-            list(range(11, 24)),   # Expert 1
-            list(range(24, 32)),   # Expert 2
-            list(range(32, 38)),   # Expert 3
-            list(range(38, 48)),   # Expert 4
-            list(range(48, 52)),   # Expert 5
+            [0, 1, 2, 3, 10, 13],
+            [4,5,6],
+            [8,9,16],
+            [7,11,12,14,15,17,18],  # Expert 5
         ]
         # print(self.expand_to_52(out_body_head, expert_class_indices[0]))
         expert_outputs_stacked = torch.stack([
@@ -812,8 +809,8 @@ class MultiBranchModel(nn.Module):
             out_upper_limb,
             out_lower_limb,
             out_body_hand,
-            out_head_hand,
-            out_leg_hand
+            # out_head_hand,
+            # out_leg_hand
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -834,7 +831,7 @@ class MultiBranchModel(nn.Module):
         predicted_class = class_probs.argmax(dim=1)       # [B]
 
         # 3. Map predicted class to expert
-        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        class_to_expert_map = torch.zeros(19, dtype=torch.long, device=predicted_class.device)
         for expert_id, indices in enumerate(expert_class_indices):
             class_to_expert_map[indices] = expert_id
         gt_labels = label.squeeze()

@@ -5,12 +5,12 @@ _base_ = [
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = '/data/stars/share/MA_52/train'
-data_root_val = '/data/stars/share/MA_52/val/'
-data_root_test = '/data/stars/share/MA_52/test/'
-ann_file_train = '/data/stars/share/MA_52/annotations/annotations_train_list_videos.txt'
-ann_file_val = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
-ann_file_test = './data/ma52/test_list_videos.txt'
+data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
+data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+data_root_test = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
+ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53],
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/all_experts_with_manet_backbone_and_without_manet_at_end_testing'
+work_dir = './work_dirs/all_experts_with_manet_backbone_and_without_manet_at_end_mpii_running'
