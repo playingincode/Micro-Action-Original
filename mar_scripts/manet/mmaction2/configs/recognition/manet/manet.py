@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea_final_model_test'
+work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea_without_manet'
