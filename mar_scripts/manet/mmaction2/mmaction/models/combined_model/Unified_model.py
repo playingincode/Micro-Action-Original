@@ -109,18 +109,18 @@ class CrossAttentionWithTransformer(nn.Module):
         """
         # Step 1: Cross-attention per time step
         # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
-        x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
+        # x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
         # print("After cross attention",x.shape)
         # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
         # fused=out_manet_model+
-
+        x=x.mean(dim=1)
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
         out_manet_model=out_manet_model.view(B,T,-1)
-        # x=x+out_manet_model
+        x=x+out_manet_model
 
         # Step 3: Temporal modeling
-        x = self.transformer(x)  # [B, T, 1408]
+        # x = self.transformer(x)  # [B, T, 1408]
 
         # Step 4: Temporal pooling (mean pooling)
         x = x.mean(dim=1)  # [B, 1408]
@@ -529,7 +529,7 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        loss_cls=self.loss_cls(cls_score,labels)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
