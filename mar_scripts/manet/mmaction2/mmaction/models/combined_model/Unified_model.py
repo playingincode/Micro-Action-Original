@@ -113,7 +113,7 @@ class CrossAttentionWithTransformer(nn.Module):
         # print("After cross attention",x.shape)
         # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
         # fused=out_manet_model+
-        x=x.mean(dim=1)
+        x=expert_outputs.mean(dim=1)
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
         out_manet_model=out_manet_model.view(B,T,-1)
