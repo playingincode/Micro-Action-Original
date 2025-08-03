@@ -117,7 +117,8 @@ class VideoDataset(BaseDataset):
                     #     label = label
                     # else:
                     #     continue
-                    
+                    # if not 16<=label<=17 :
+                    #     continue
                         
                 if self.data_prefix is not None:
                     filename = osp.join(self.data_prefix, filename)

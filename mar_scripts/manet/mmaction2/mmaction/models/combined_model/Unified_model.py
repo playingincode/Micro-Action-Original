@@ -66,7 +66,7 @@ class TreeLoss(nn.Module):
         pred_coarse=self.sig(pred_coarse)
         pred_fine=self.sig(pred_fine)
         pred_fusion=torch.cat((pred_coarse,pred_fine),dim=1)
-        labels_fine=labels_fine+6
+        labels_fine=labels_fine+4
         index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)
         joint = torch.exp(index)
         z = torch.sum(joint, dim=0)
@@ -77,11 +77,11 @@ class TreeLoss(nn.Module):
         return torch.mean(loss)
     
     def generateStateSpace(self):
-        stat_list = np.eye(58)
-        for i in range(6, 58):
+        stat_list = np.eye(23)
+        for i in range(4, 23):
             temp=stat_list[i]
             index=np.where(temp>0)[0]
-            coarse=fine2coarse(int(index)-6)
+            coarse=fine2coarse(int(index)-4)
             stat_list[i][coarse]=1 
         stateSpace = torch.tensor(stat_list)
         return stateSpace
@@ -100,7 +100,7 @@ class CrossAttentionWithTransformer(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
      
-        self.classifier = nn.Linear(d_model, 52)
+        self.classifier = nn.Linear(d_model, 19)
 
     def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
         """
