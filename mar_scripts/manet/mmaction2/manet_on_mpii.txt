@@ -1,0 +1,30 @@
+lv1_acc: 0.8123
+lv2_acc: 0.6783
+lv1_f1_micro: 0.8123
+lv1_f1_macro: 0.7460
+lv2_f1_micro: 0.6783
+lv2_f1_macro: 0.4245
+mean_f1: 0.6653
+lv2_per_class_accuracy:
+  Class 0: 0.4339
+  Class 1: 0.4912
+  Class 2: 0.7493
+  Class 3: 0.8796
+  Class 4: 0.7356
+  Class 5: 0.5624
+  Class 6: 0.4591
+  Class 7: 0.1852
+  Class 8: 0.6541
+  Class 9: 0.7619
+  Class 10: 0.3575
+  Class 11: 0.8199
+  Class 12: 0.4659
+  Class 13: 0.2892
+  Class 14: 0.0000
+  Class 15: 0.0000
+  Class 16: 0.0000
+  Class 17: 0.0000
+lv1_per_class_accuracy:
+  Class 0: 0.8706
+  Class 1: 0.8007
+  Class 2: 0.5426

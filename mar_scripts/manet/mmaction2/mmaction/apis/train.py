@@ -133,9 +133,55 @@ def train_model(model,
     else:
         model = build_dp(
             model, default_device, default_args=dict(device_ids=cfg.gpu_ids))
-
+    # for name, _ in model.named_parameters():
+    #     if "body_head_model" in name:
+    #         print("babyayayya",name)
+    for name, param in model.named_parameters():
+        param._param_name = name
     # build runner
+    # print("hahajasjsha",cfg.optimizer)
     optimizer = build_optimizer(model, cfg.optimizer)
+# ↓ Adjust LR for expert models
+# Create new param groups for expert parameters
+    new_param_groups = []
+    expert_keywords = [
+        'body_head_model',
+        'upper_limb_model',
+        'lower_limb_model',
+        'body_hand_model',
+        'head_hand_model',
+        'leg_hand_model'
+    ]
+
+    for group in optimizer.param_groups:
+        base_lr = group['lr']
+        base_group_copy = {k: v for k, v in group.items() if k != 'params'}
+        expert_params = []
+        non_expert_params = []
+
+        for param in group['params']:
+            name = getattr(param, '_param_name', None)
+            if name and any(expert in name for expert in expert_keywords):
+                expert_params.append(param)
+            else:
+                non_expert_params.append(param)
+
+        # Add separate groups for expert and non-expert params
+        if non_expert_params:
+            new_param_groups.append({**base_group_copy, 'params': non_expert_params, 'lr': base_lr})
+        if expert_params:
+            new_param_groups.append({**base_group_copy, 'params': expert_params, 'lr': base_lr * 0.1})
+
+    # Replace optimizer's param groups
+    optimizer.param_groups = new_param_groups
+    
+    for i, group in enumerate(optimizer.param_groups):
+        print(f"Param group {i}: lr={group['lr']}, num_params={len(group['params'])}")
+        sample_names = [getattr(p, '_param_name', '') for p in group['params'][:3]]
+        for name in sample_names:
+            print(f"   ↳ {name}")
+
+
 
     Runner = OmniSourceRunner if cfg.omnisource else EpochBasedRunner
     runner = Runner(
@@ -156,6 +202,8 @@ def train_model(model,
         optimizer_config = OptimizerHook(**cfg.optimizer_config)
     else:
         optimizer_config = cfg.optimizer_config
+        
+    print("Optimizer config",optimizer_config)
 
     # register hooks
     runner.register_training_hooks(

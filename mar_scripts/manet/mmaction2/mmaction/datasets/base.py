@@ -282,13 +282,40 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         parts = video_path.strip(os.sep).split(os.sep)
         relative_path = os.path.join(parts[-2], parts[-1])
         # print("Video path",)
-        complete_path_videomaev2_features=os.path.join("/data/stars/user/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
         # print("Video mae v2",complete_path_videomaev2_features)
-        npy_path = os.path.splitext(complete_path_videomaev2_features)[0] + '.npy'
+        whole_body_npy_path=os.path.splitext(whole_body_features)[0] + '.npy'
+        face_npy_path = os.path.splitext(face_features)[0] + '.npy'
+        body_npy_path=os.path.splitext(body_features)[0] + '.npy'
+        upper_limb_npy_path=os.path.splitext(upper_limb_features)[0] + '.npy'
+        lower_limb_npy_path=os.path.splitext(lower_limb_features)[0] + '.npy'
 
 # Load the .npy file
-        if os.path.exists(npy_path):
-            features = np.load(npy_path)
+        if os.path.exists(whole_body_npy_path):
+            whole_body_features_from_np = np.load(whole_body_npy_path)
+        else:
+            print("Hi")
+        if os.path.exists(face_npy_path):
+            face_features_from_np = np.load(face_npy_path)
+        else:
+            print("Hi")
+        
+        if os.path.exists(body_npy_path):
+            body_features_from_np = np.load(body_npy_path)
+        else:
+            print("Hi")
+        
+        if os.path.exists(upper_limb_npy_path):
+            upper_limb_features_from_np = np.load(upper_limb_npy_path)
+        else:
+            print("Hi")
+        
+        if os.path.exists(lower_limb_npy_path):
+            lower_limb_features_from_np = np.load(lower_limb_npy_path)
         else:
             print("Hi")
 
@@ -301,13 +328,21 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
             results['label'] = onehot
             
         
-        features_tensor = torch.tensor(features) 
-        features_tensor=self.pad_or_truncate(features_tensor)
+        whole_body_features_tensor = torch.tensor(whole_body_features_from_np) 
+        face_features_tensor = torch.tensor(face_features_from_np) 
+        body_features_tensor = torch.tensor(body_features_from_np) 
+        lower_limb_features_tensor = torch.tensor(lower_limb_features_from_np) 
+        upper_limb_features_tensor = torch.tensor(upper_limb_features_from_np) 
+        whole_body_features_tensor = torch.tensor(whole_body_features_from_np) 
         # print("Pipeline ",type(self.pipeline(results)['imgs']))
         # exit()
         # print(f"[DEBUG] idx={idx}, features shape: {features_tensor.shape}")
         data = self.pipeline(results)
-        data['videomae_features'] = features_tensor
+        data['whole_body_features'] = whole_body_features_tensor
+        data['face_features'] = face_features_tensor
+        data['body_features'] = body_features_tensor
+        data['lower_limb_features'] = lower_limb_features_tensor
+        data['upper_limb_features'] = upper_limb_features_tensor
         return data
         # print("results",results)
         # print("Pipeling results",self.pipeline(results))
@@ -324,7 +359,7 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         parts = video_path.strip(os.sep).split(os.sep)
         relative_path = os.path.join(parts[-2], parts[-1])
         # print("Video path",)
-        complete_path_videomaev2_features=os.path.join("/data/stars/user/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
+        complete_path_videomaev2_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
         # print("Video mae v2",complete_path_videomaev2_features)
         npy_path = os.path.splitext(complete_path_videomaev2_features)[0] + '.npy'
 

@@ -217,6 +217,8 @@ def main():
     
     model = build_model(
         cfg.model)
+
+
     
     # body_head_model = build_model(
     #     cfg.body_head_model,

@@ -1,17 +1,18 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu46.inria.fr'
-#OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name all_experts_with_all_ours_with_pcan_idea_implemented_gpu_46
+#OAR -p esterel37
+#OAR -l host=1/gpu=1,walltime=72:00:00
+#OAR --name all_experts_implemented_with_pcan_without_pretraining_expert_selector_with_decreased_learning_rate
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
 
-
+source ~/.bashrc
+conda info
 module load conda/2020.48-python3.8 cuda/12.2 gcc/9.2.0
 
 # Activate conda environment
 source $(conda info --base)/etc/profile.d/conda.sh
-source activate manet_new_six|| { echo "Conda environment not found"; exit 1; }
+source activate openmmlab|| { echo "Conda environment not found"; exit 1; }
 
 # Display python version and path
 python --version
