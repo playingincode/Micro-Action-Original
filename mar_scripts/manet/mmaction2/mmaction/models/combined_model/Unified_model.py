@@ -163,7 +163,7 @@ class MultiBranchModel(nn.Module):
         checkpoint = torch.load(main_model.pretrained, map_location='cpu')
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
-        self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
+        # self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
         load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
         load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
         load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
@@ -399,7 +399,9 @@ class MultiBranchModel(nn.Module):
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
         loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        print("Loss classifier",loss_cls)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
+        print("Loss emb",loss_embd)
         loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):

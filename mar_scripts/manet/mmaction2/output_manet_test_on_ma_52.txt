@@ -1,0 +1,68 @@
+lv1_acc: 0.7916
+lv2_acc: 0.6142
+lv1_f1_micro: 0.7916
+lv1_f1_macro: 0.7351
+lv2_f1_micro: 0.6142
+lv2_f1_macro: 0.4962
+mean_f1: 0.6593
+lv2_per_class_accuracy:
+  Class 0: 0.6209
+  Class 1: 0.5000
+  Class 2: 0.0000
+  Class 3: 0.0000
+  Class 4: 0.5921
+  Class 5: 0.5714
+  Class 6: 0.4628
+  Class 7: 0.4561
+  Class 8: 0.6708
+  Class 9: 0.8050
+  Class 10: 0.7563
+  Class 11: 0.7321
+  Class 12: 0.4464
+  Class 13: 0.6383
+  Class 14: 0.2381
+  Class 15: 0.3659
+  Class 16: 0.5135
+  Class 17: 0.5114
+  Class 18: 0.4419
+  Class 19: 0.5435
+  Class 20: 0.4247
+  Class 21: 0.7571
+  Class 22: 0.2151
+  Class 23: 0.6396
+  Class 24: 0.6471
+  Class 25: 0.6364
+  Class 26: 0.3261
+  Class 27: 0.6875
+  Class 28: 0.7333
+  Class 29: 0.6435
+  Class 30: 0.4688
+  Class 31: 0.7071
+  Class 32: 0.4333
+  Class 33: 0.6000
+  Class 34: 0.6000
+  Class 35: 0.3125
+  Class 36: 0.7619
+  Class 37: 0.8000
+  Class 38: 0.5682
+  Class 39: 0.6250
+  Class 40: 0.2500
+  Class 41: 0.3492
+  Class 42: 0.5455
+  Class 43: 0.7083
+  Class 44: 0.4400
+  Class 45: 0.0000
+  Class 46: 0.0000
+  Class 47: 0.5294
+  Class 48: 0.5933
+  Class 49: 0.6734
+  Class 50: 0.3778
+  Class 51: 0.3000
+lv1_per_class_accuracy:
+  Class 0: 0.6413
+  Class 1: 0.8486
+  Class 2: 0.7791
+  Class 3: 0.7810
+  Class 4: 0.6711
+  Class 5: 0.7932
+  Class 6: 0.7168
