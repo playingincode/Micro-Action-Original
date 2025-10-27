@@ -1,13 +1,12 @@
 #!/bin/bash
 #OAR -p esterel30
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name unique_experts_without_manet_with_pcan_251025_30
+#OAR --name unique_experts_with_manet_test
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
 
 source ~/.bashrc
-conda info
 module load conda/2020.48-python3.8 cuda/12.2 gcc/9.2.0
 
 # Activate conda environment
@@ -29,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic
+python -u tools/test.py configs/recognition/manet/manet.py  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_manet_with_pcan_251025/best_top1_acc_epoch_93.pth --out online_evaluation/all_results_mpii_with_unique_parts_our_model.pickle
