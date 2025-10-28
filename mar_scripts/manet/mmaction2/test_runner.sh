@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/test.py configs/recognition/manet/manet.py  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_manet_with_pcan_251025/best_top1_acc_epoch_93.pth --out online_evaluation/all_results_mpii_with_unique_parts_our_model_retry.pickle
+python -u tools/test.py configs/recognition/manet/manet.py  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_manet_with_pcan_251025/best_top1_acc_epoch_93.pth --out online_evaluation/all_results_mpii_with_unique_parts_our_model_on_validation_retry.pickle
