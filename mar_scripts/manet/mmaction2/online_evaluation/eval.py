@@ -9,7 +9,7 @@ import zipfile
 import csv
 import numpy as np
 
-pickle_file_path = 'online_evaluation/test_result_pcan.pickle'
+pickle_file_path = 'online_evaluation/all_results_mpii_with_unique_parts_our_model_retry.pickle'
 pred_file_path = 'online_evaluation/prediction.csv'
 zip_file_path = 'online_evaluation/submission.zip'
 
