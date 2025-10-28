@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel30
+#OAR -p esterel38
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name unique_experts_without_manet_with_pcan_251025_30
+#OAR --name unique_experts_with_manet_with_linear_layer_retry
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
@@ -29,4 +29,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic
+python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic 

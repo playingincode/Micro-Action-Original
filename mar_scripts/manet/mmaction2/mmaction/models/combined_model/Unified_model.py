@@ -250,6 +250,8 @@ class MultiBranchModel(nn.Module):
 
         
         out_main = self.main_model(imgs, label,emb, whole_body_features_tensor,**kwargs)
+        # print("out main",out_main.shape)
+        # print("whole body features",whole_body_features_tensor.shape)
         # print("Out main",out_main.shape)
         # out_main=self.main_model_linear(out_main)
         # print("Out main",out_main)
@@ -510,6 +512,9 @@ class MultiBranchModel(nn.Module):
         
         
         out_main,cls_score_main = self.main_model(imgs, label,emb, whole_body_features,**kwargs)
+        # print("out main",out_main.shape)
+        # print("whole body features",whole_body_features.shape)
+        # whole_body = whole_body.squeeze(2).flatten(0, 1) 
         # print("Out main",out_main.shape)
         # print(cls_score_main)
         # out_main=self.main_model_linear(out_main)

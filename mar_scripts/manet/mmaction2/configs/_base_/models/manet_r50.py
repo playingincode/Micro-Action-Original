@@ -177,7 +177,7 @@
 model = dict(
     type='MultiBranchModel',
     main_model=dict(
-        type='Recognizer2D_ours',
+        type='Recognizer2D_main_model_ours',
         pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_six_classes_our_model/best_top1_acc_epoch_32.pth',
         backbone=dict(
             type='ResNetTSM',
