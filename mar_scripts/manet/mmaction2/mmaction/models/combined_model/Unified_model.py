@@ -111,6 +111,7 @@ class CrossAttentionWithTransformer(nn.Module):
         """
         # Step 1: Cross-attention per time step
         # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
+        # gate_weights=torch.softmax(out_manet_model, dim=1)
         x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
         # print("After cross attention",x.shape)
         # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
@@ -163,10 +164,10 @@ class MultiBranchModel(nn.Module):
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
-        # checkpoint = torch.load(main_model.pretrained, map_location='cpu')
+        checkpoint = torch.load(main_model.pretrained, map_location='cpu')
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
-        # self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
+        self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
         load_checkpoint(self.face_model, face_model.pretrained, map_location='cpu')
         load_checkpoint(self.body_model, body_model.pretrained, map_location='cpu')
         load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
@@ -330,6 +331,8 @@ class MultiBranchModel(nn.Module):
         # 
         B=imgs.shape[0]
         T=imgs.shape[1]
+        whole_body_features_sequeezed = whole_body_features_tensor.squeeze(2).flatten(0, 1)
+        gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
@@ -409,7 +412,7 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        loss_cls=self.loss_cls(cls_score,labels)
         # print("Classifier loss",loss_cls)
         # print(isinstance(loss_cls, dict))
         # loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
@@ -603,6 +606,8 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
+        whole_body_features_sequeezed = whole_body_features.squeeze(2).flatten(0, 1)
+        gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
         
 # 2. Predict class from logits
@@ -801,6 +806,9 @@ class MultiBranchModel(nn.Module):
         # print(f"x shape before view: {expert_outputs_stacked.shape}")
         B=imgs.shape[0]
         T=imgs.shape[1]
+        # gate_weights=torch.softmax(whole_body_features, dim=1)
+        whole_body_features_sequeezed = whole_body_features.squeeze(2).flatten(0, 1)
+        gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
         
 # 2. Predict class from logits
