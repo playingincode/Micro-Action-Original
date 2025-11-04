@@ -164,18 +164,18 @@ class MultiBranchModel(nn.Module):
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
-        checkpoint = torch.load(main_model.pretrained, map_location='cpu')
+        # checkpoint = torch.load(main_model.pretrained, map_location='cpu')
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
-        self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
-        load_checkpoint(self.face_model, face_model.pretrained, map_location='cpu')
-        load_checkpoint(self.body_model, body_model.pretrained, map_location='cpu')
-        load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
-        load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
+        # self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
+        # load_checkpoint(self.face_model, face_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.body_model, body_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
         
         # load_checkpoint(self.head_hand_model, head_hand_model.pretrained, map_location='cpu')
         # load_checkpoint(self.leg_hand_model, leg_hand_model.pretrained, map_location='cpu')
-        load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
         #  super().__init__()
         self.num_classes = num_classes
         self.in_channels = 1408

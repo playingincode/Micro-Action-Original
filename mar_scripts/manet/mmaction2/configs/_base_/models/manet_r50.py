@@ -199,7 +199,7 @@ model = dict(
     ),
     face_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/face_only_ma_52/best_top1_acc_epoch_31.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/expert_selector_experiments_new_architecture_expert_face/best_top1_acc_epoch_39.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -220,7 +220,7 @@ model = dict(
     ),
     body_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/body_only_ma_52/best_top1_acc_epoch_18.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/expert_selector_experiments_new_architecture_expert_body/best_top1_acc_epoch_59.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -240,7 +240,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     upper_limb_model=dict(
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/upper_limb_only_ma_52/best_top1_acc_epoch_44.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/expert_selector_experiments_new_architecture_expert_upper_limb/best_top1_acc_epoch_28.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
@@ -262,7 +262,7 @@ model = dict(
     ),
     lower_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/lower_limb_only_ma_52/best_top1_acc_epoch_34.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/expert_selector_experiments_new_architecture_expert_lower_limb/best_top1_acc_epoch_58.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',

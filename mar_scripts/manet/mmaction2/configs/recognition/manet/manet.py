@@ -88,8 +88,8 @@ data = dict(
         pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=ann_file_test,
-        data_prefix=data_root_test,
+        ann_file=ann_file_val,
+        data_prefix=data_root_val,
         pipeline=test_pipeline))
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_test'
+work_dir = './work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_new_SGP_final_test'
