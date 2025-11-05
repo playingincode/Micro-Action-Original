@@ -50,4 +50,6 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic
+
+
+python -u tools/test.py configs/recognition/manet/manet.py /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_Social_gesture/best_top1_acc_epoch_4.pth --out online_evaluation/checking_the_f1_scores_for_social_gestures.pickle
