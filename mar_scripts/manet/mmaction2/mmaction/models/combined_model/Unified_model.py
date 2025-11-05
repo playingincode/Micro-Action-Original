@@ -10,6 +10,7 @@ from collections import OrderedDict
 import torch.distributed as dist
 import numpy as np
 import traceback
+import csv
 
 
 def fine2coarse(x):
@@ -50,11 +51,21 @@ class CrossAttention(nn.Module):
 
         Q = Q.unsqueeze(1)                      # [B, 1, d_k]
         attn_scores = torch.matmul(Q, K.transpose(-2, -1)) / (self.d_k ** 0.5)  # [B, 1, 6]
-        attn_weights = torch.softmax(attn_scores, dim=-1)                       # [B, 1, 6]
+        attn_weights = torch.softmax(attn_scores, dim=-1)     
+        # print("Shape",attn_weights.shape)# [B*T, 1, 6]
+        attn_weights_cpu = attn_weights.detach().cpu().numpy()
+        attn_weights_cpu = attn_weights_cpu.squeeze(1)
+        avg_attn_cpu = attn_weights_cpu.mean(axis=0)                # shape: [6]
+
+# Append the average to the CSV
+        csv_path = "CVPR_attn_weights_log_val_with_videomae_as_questioner_cross_entropy_without_initializtion.csv"
+        with open(csv_path, mode='a', newline='') as file:
+            writer = csv.writer(file)
+            writer.writerow(avg_attn_cpu)
         attended = torch.matmul(attn_weights, V)           
         
         # [B, 1, 52]
-        return attended.squeeze(1)                                              
+        return attended.squeeze(1)                                          
     
     
 

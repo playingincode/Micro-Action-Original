@@ -51,7 +51,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description='MMAction2 test (and eval) a model')
     parser.add_argument('config', help='test config file path')
-    parser.add_argument('checkpoint', help='checkpoint file')
+    parser.add_argument('checkpoint', help='checkpoint file',default="")
     parser.add_argument(
         '--out',
         help='output result file in pkl/yaml/json format')
@@ -162,7 +162,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    load_checkpoint(model, args.checkpoint, map_location='cpu')
+    # load_checkpoint(model, args.checkpoint, map_location='cpu')
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
