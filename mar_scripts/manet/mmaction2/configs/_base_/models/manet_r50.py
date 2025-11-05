@@ -322,11 +322,10 @@ model = dict(
             is_shift=True),
         train_cfg=None,
         test_cfg=dict(average_clips='prob')
-    ),
-    
-    manet_52_model=dict(
+    ),    
+manet_52_model=dict(
         type='Recognizer2D',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet/best_top1_acc_epoch_46.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_mpII/best_top1_acc_epoch_39.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -335,7 +334,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead',
-            num_classes=52,
+            num_classes=19,
             in_channels=2048,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
