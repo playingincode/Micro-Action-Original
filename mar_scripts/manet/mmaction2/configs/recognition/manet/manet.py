@@ -5,12 +5,12 @@ _base_ = [
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/train'
-data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/val/'
-data_root_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/test/'
-ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/annotations/annotations_train_list_videos.txt'
-ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/annotations/annotations_val_list_videos.txt'
-ann_file_test = './data/ma52/test_list_videos.txt'
+data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/train/'
+data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/val/'
+data_root_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/val/'
+ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/train_list_videos_mpII.txt'
+ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/val_list_videos_mpII_skipping_not_generated_sapiens_val_video.txt'
+ann_file_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/val_list_videos_mpII_skipping_not_generated_sapiens_val_video.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53],
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_test'
+work_dir = './work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_MPII'
