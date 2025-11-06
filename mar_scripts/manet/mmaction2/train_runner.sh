@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel
+#OAR -p esterel44
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name extracting_segments_for_MA_52_128
+#OAR --name manet_for_mpII_with_frontal_final
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 

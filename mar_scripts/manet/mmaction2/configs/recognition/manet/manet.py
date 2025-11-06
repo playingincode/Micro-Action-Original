@@ -99,5 +99,5 @@ optimizer = dict(
     lr=0.01/8, 
 )
 # runtime settings
-checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_for_mpII_checking_with_frontal'
+checkpoint_config = dict(interval=1)
+work_dir = './work_dirs/manet_for_mpII_with_frontal_final'
