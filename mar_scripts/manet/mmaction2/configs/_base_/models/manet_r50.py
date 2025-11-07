@@ -199,7 +199,7 @@ model = dict(
     ),
     face_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_FACE_EXPERT/best_top1_acc_epoch_24.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_FACE_FRONTAL_EXPERT/best_top1_acc_epoch_37.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -220,7 +220,7 @@ model = dict(
     ),
     body_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_BODY_EXPERT/best_top1_acc_epoch_1.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_BODY_FRONTAL_EXPERT/best_top1_acc_epoch_1.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -240,7 +240,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     upper_limb_model=dict(
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_UPPER_LIMB_EXPERT/best_top1_acc_epoch_7.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_UPPER_LIMB_FRONTAL_EXPERT/best_top1_acc_epoch_23.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
@@ -262,7 +262,7 @@ model = dict(
     ),
     lower_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_LOWER_LIMB_EXPERT/best_top1_acc_epoch_10.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_LOWER_LIMB_FRONTAL_EXPERT/best_top1_acc_epoch_6.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -325,7 +325,7 @@ model = dict(
     ),    
 manet_52_model=dict(
         type='Recognizer2D',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_mpII/best_top1_acc_epoch_39.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_mpII_with_frontal_final/best_top1_acc_epoch_54.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',

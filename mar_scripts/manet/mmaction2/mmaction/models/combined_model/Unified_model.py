@@ -102,7 +102,7 @@ class CrossAttentionWithTransformer(nn.Module):
         )
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
      
-        self.classifier = nn.Linear(d_model, 52)
+        self.classifier = nn.Linear(d_model, 19)
 
     def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
         """
