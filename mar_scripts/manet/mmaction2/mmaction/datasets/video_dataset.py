@@ -46,8 +46,13 @@ class VideoDataset(BaseDataset):
         """Load annotation file to get video information."""
         if self.ann_file.endswith('.json'):
             return self.load_json_annotations()
-
+        
         video_infos = []
+        skip_file = "recording09_subjectPos3_0345126-0347726_HandFace_video.mp4"
+        # label_map = {8: 0, 9: 1, 16: 2}
+        # label_map = {0: 0, 1: 1, 2: 2, 3: 3, 10: 4, 12: 5, 13: 6}
+        # label_map = {4: 0, 5: 1, 6: 2}
+        # label_map = {7: 0, 11: 1, 14: 2, 15: 3, 17: 4, 18: 5}
         with open(self.ann_file, 'r') as fin:
             for line in fin:
                 line_split = line.strip().split()
@@ -58,73 +63,20 @@ class VideoDataset(BaseDataset):
                 else:
                     filename, label = line_split
                     label = int(label)
-                    # if not 50<=label<=51:
-                    #     continue
-                        
-                    # if 0 <= label <= 10:
-                    #     label=0
-                    #     emb=self.embeddings[0]
-                  
+                    label1=label
 
-                    # elif 11 <= label <= 23:
-                    #     label=1
-                    #     emb=self.embeddings[11]
-                   
+                    if skip_file in filename:
+                        continue                                    
+                    if '_video.' not in filename:
+                        continue
                     
-                    # # else:
-                    # #     continue
-                    # elif 24 <= label <= 31:
-                    #     label=2
-                    #     emb=self.embeddings[24]
-                    #     # label=label-24
-                     
-                    # # else:
-                    # #     continue
-                        
-                    # elif 32 <= label <= 37:
-                    #     label=3
-                    #     emb=self.embeddings[32]
-                    #     # label=label-32
-                    # # else:
-                    # #     continue
-                    # elif 38 <= label <= 47:
-                    #     label=4
-                    #     emb=self.embeddings[38]
-                        # label=label-38
-                    # else:
+                    # remap labels
+                    # if label not in label_map:
                     #     continue
-                    # if 48 <= label <= 51:
-                    #     label=label
-                    #     emb=self.embeddings[label]
-                    #     label=label-48
-                    # else:
-                    #     continue
-                    # if 0 <= label <= 10:
-                    #     # label = 0
-                    #     # if 0 <= label <= 10:
-                    #     label = 0
-                    #     emb = np.mean(self.embeddings[0:11], axis=0)
-                    # elif 11 <= label <= 23:
-                    #     label = 1
-                    #     emb = np.mean(self.embeddings[11:24], axis=0)
-                    # elif 24 <= label <= 31:
-                    #     label = 2
-                    #     emb = np.mean(self.embeddings[24:32], axis=0)
-                    # elif 32 <= label <= 37:
-                    #     label = 3
-                    #     emb = np.mean(self.embeddings[32:38], axis=0)
-                    # elif 38 <= label <= 47:
-                    #     label = 4
-                    #     emb = np.mean(self.embeddings[38:48], axis=0)
-                    # if 50 <= label <= 51:
-                    #     label = label
-                    # else:
-                    #     continue
+                    # label = label_map[label]
                     
-                        
                 if self.data_prefix is not None:
                     filename = osp.join(self.data_prefix, filename)
-                # print(self.embeddings.shape)
-                emb=self.embeddings[label]
+                emb=self.embeddings[label1]
                 video_infos.append(dict(filename=filename, label=label,emb=emb))
         return video_infos
