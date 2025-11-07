@@ -251,6 +251,9 @@ def my_evaluate(dataset, results, target_path):
 
 def lv_evaluate(predictions, labels):
     # prediction and labels are action-level
+    top5_preds = np.argsort(predictions, axis=1)[:, -5:]  # take top 5 indices
+    correct_top5 = sum(label in top5 for label, top5 in zip(labels, top5_preds))
+    lv2_top5_acc = correct_top5 / len(labels)
     predictions = np.argsort(predictions, axis=1)[:, -1:][:, ::-1]
     pre=[]
     for i in predictions:
@@ -258,6 +261,7 @@ def lv_evaluate(predictions, labels):
     predictions=pre
     lv1_preds = [fine2coarse(lv2id) for lv2id in predictions]
     lv1_labels = [fine2coarse(lv2id) for lv2id in labels]
+
 
     lv2_f1_micro = f1_score(labels, predictions, average='micro')
     lv2_f1_macro = f1_score(labels, predictions, average='macro')
@@ -267,6 +271,7 @@ def lv_evaluate(predictions, labels):
 
     eval_results = {'lv1_acc': accuracy_score(lv1_labels, lv1_preds),
                     'lv2_acc': accuracy_score(labels, predictions),
+                    'lv2_top5_acc': lv2_top5_acc,
                     'lv1_f1_micro': lv1_f1_micro,
                     'lv1_f1_macro': lv1_f1_macro,
                     'lv2_f1_micro': lv2_f1_micro,
