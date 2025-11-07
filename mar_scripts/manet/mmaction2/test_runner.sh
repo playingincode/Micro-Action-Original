@@ -52,4 +52,4 @@ export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
 
 
-python -u tools/test.py configs/recognition/manet/manet.py /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_Social_gesture/best_top1_acc_epoch_4.pth --out online_evaluation/checking_the_f1_scores_for_social_gestures.pickle
+python -u tools/test.py configs/recognition/manet/manet.py /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_Social_gesture_final_retry/best_top1_acc_epoch_45.pth --out online_evaluation/checking_the_f1_scores_for_social_gestures_retry.pickle
