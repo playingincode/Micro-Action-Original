@@ -280,13 +280,13 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         
         video_path = results['filename']
         parts = video_path.strip(os.sep).split(os.sep)
-        relative_path = os.path.join(parts[-2], parts[-1])
+        relative_path = parts[-1]
         # print("Video path",)
-        whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_videoMAE_mpiigi",relative_path)
-        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_face",relative_path)
-        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_body",relative_path)
-        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_lower_limb",relative_path)
-        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_upper_limb",relative_path)
+        whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/ALL_BODY_SOCIAL",relative_path)
+        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_face",relative_path)
+        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_body",relative_path)
+        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_lower_limb",relative_path)
+        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_upper_limb",relative_path)
         # print("Video mae v2",complete_path_videomaev2_features)
         whole_body_npy_path=os.path.splitext(whole_body_features)[0] + '.npy'
         face_npy_path = os.path.splitext(face_features)[0] + '.npy'
@@ -361,17 +361,17 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         
         video_path = results['filename']
         parts = video_path.strip(os.sep).split(os.sep)
-        relative_path = os.path.join(parts[-2], parts[-1])
+        relative_path = parts[-1]
         # print("Video path",)
-        complete_path_videomaev2_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_videoMAE_mpiigi",relative_path)
+        complete_path_videomaev2_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/ALL_BODY_SOCIAL",relative_path)
         # print("Video mae v2",complete_path_videomaev2_features)
         npy_path = os.path.splitext(complete_path_videomaev2_features)[0] + '.npy'
         
-        whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_videoMAE_mpiigi",relative_path)
-        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_face",relative_path)
-        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_body",relative_path)
-        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_lower_limb",relative_path)
-        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Feature_MPIIGI_EXPERTS/mpiigi_upper_limb",relative_path)
+        whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/ALL_BODY_SOCIAL",relative_path)
+        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_face",relative_path)
+        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_body",relative_path)
+        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_lower_limb",relative_path)
+        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_SocialBehaviur/socialBehaviur_upper_limb",relative_path)
         # print("Video mae v2",complete_path_videomaev2_features)
         whole_body_npy_path=os.path.splitext(whole_body_features)[0] + '.npy'
         face_npy_path = os.path.splitext(face_features)[0] + '.npy'

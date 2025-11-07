@@ -199,7 +199,7 @@ model = dict(
     ),
     face_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_FACE_FRONTAL_EXPERT/best_top1_acc_epoch_37.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_FACE_EXPERT/best_top1_acc_epoch_14.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -208,7 +208,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=3,
+            num_classes=4,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -220,7 +220,7 @@ model = dict(
     ),
     body_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_BODY_FRONTAL_EXPERT/best_top1_acc_epoch_1.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_BODY_EXPERT/best_top1_acc_epoch_1.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -229,7 +229,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=6,
+            num_classes=4,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -240,7 +240,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     upper_limb_model=dict(
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_UPPER_LIMB_FRONTAL_EXPERT/best_top1_acc_epoch_23.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_UPPER_LIMB_EXPERT/best_top1_acc_epoch_14.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
@@ -250,7 +250,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=7,
+            num_classes=4,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -262,7 +262,7 @@ model = dict(
     ),
     lower_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/MPIIGI_LOWER_LIMB_FRONTAL_EXPERT/best_top1_acc_epoch_6.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_LOWER_LIMB_EXPERT/best_top1_acc_epoch_10.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -271,7 +271,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=3,
+            num_classes=4,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -325,7 +325,7 @@ model = dict(
     ),    
 manet_52_model=dict(
         type='Recognizer2D',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_mpII_with_frontal_final/best_top1_acc_epoch_54.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_for_Social_gesture_final_retry/best_top1_acc_epoch_45.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -334,7 +334,7 @@ manet_52_model=dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead',
-            num_classes=19,
+            num_classes=4,
             in_channels=2048,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
