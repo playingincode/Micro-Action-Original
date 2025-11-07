@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/manet_for_Social_gesture_test'
+work_dir = './work_dirs/manet_for_Social_gesture_final_retry'

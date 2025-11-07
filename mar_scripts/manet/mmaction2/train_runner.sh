@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel17
+#OAR -p esterel40
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name manet_for_Social_gestures
+#OAR --name manet_for_Social_gestures_final_retry
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
