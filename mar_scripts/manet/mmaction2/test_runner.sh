@@ -1,5 +1,5 @@
 #!/bin/bash
-#OAR -p esterel40
+#OAR -p esterel35
 #OAR -l host=1/gpu=1,walltime=72:00:00
 #OAR --name I3d_MPIIGroupInteraction_frontal_final
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/i3d/my_i3d_r50_video_32x2x1_100e_micro_action_rgb.py --seed=0 --deterministic
+python -u tools/test.py configs/recognition/i3d/my_i3d_r50_video_32x2x1_100e_micro_action_rgb.py "" --out online_evaulation/i3d_for_mpii_frontal.pickle
