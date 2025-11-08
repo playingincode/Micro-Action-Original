@@ -37,7 +37,7 @@ class VideoDataset(BaseDataset):
     """
 
     def __init__(self, ann_file, pipeline, start_index=0, **kwargs):
-        self.embeddings=np.load("/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/mpii_group_interaction_embeddings.npy")
+        self.embeddings=np.load("/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Social_gestures_embeddings.npy")
         super().__init__(ann_file, pipeline, start_index=start_index, **kwargs)
         
 
@@ -67,8 +67,8 @@ class VideoDataset(BaseDataset):
                     # elif 11 <= label <= 23:
                     #     label=1
                     #     emb=self.embeddings[11]
-                    if "_video.mp4" not in filename:
-                        continue
+                    # if "_video.mp4" not in filename:
+                    #     continue
                    
                     
                     # # else:

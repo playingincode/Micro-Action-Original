@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel43
+#OAR -p esterel40
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name all_experts_with_mpii_our_model_with_pcan_idea_without_manet_without_pcan_frontal_fianl
+#OAR --name all_experts_with_Social_Gesture_without_manet_without_pcan_loss_old_experts
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
