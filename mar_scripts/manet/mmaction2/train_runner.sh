@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p esterel35
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name timnesformer_for_Social_gestures_final
+#OAR --name timnesformer_for_Social_gestures_final_corrected_num_classes
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 

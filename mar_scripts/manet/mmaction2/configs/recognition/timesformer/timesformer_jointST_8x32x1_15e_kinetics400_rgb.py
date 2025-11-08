@@ -16,7 +16,7 @@ model = dict(
         transformer_layers=None,
         attention_type='joint_space_time',
         norm_cfg=dict(type='LN', eps=1e-6)),
-    cls_head=dict(type='TimeSformerHead', num_classes=19, in_channels=768),
+    cls_head=dict(type='TimeSformerHead', num_classes=4, in_channels=768),
     # model training and testing settings
     train_cfg=None,
     test_cfg=dict(average_clips='prob'))
@@ -121,4 +121,4 @@ total_epochs = 500
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timnesformer_for_Social_gestures_final'
+work_dir = './work_dirs/timnesformer_for_Social_gestures_final_corrected_num_classes'
