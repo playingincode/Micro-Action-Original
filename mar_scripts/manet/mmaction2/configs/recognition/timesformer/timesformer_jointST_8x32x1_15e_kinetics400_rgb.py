@@ -23,11 +23,11 @@ model = dict(
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
-data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
-ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
-ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
-ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/SocialGesture/videos'
+data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/SocialGesture/videos'
+ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/train_labels_for_Social_gestures.txt'
+ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/test_labels_for_Social_gestures.txt'
+ann_file_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/test_labels_for_Social_gestures.txt'
 
 img_norm_cfg = dict(
     mean=[127.5, 127.5, 127.5], std=[127.5, 127.5, 127.5], to_bgr=False)
@@ -121,4 +121,4 @@ total_epochs = 500
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timesformer_on_mpii_again_test'
+work_dir = './work_dirs/timnesformer_for_Social_gestures_final'

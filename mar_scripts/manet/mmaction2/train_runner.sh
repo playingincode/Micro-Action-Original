@@ -1,17 +1,17 @@
 #!/bin/bash
-#OAR -p gpu='YES' and host='nefgpu57.inria.fr'
-#OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name timesformer_on_mpii_again
+#OAR -p esterel35
+#OAR -l host=1/gpu=1,walltime=72:00:00
+#OAR --name timnesformer_for_Social_gestures_final
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
 
-
+source ~/.bashrc
 module load conda/2020.48-python3.8 cuda/12.2 gcc/9.2.0
 
 # Activate conda environment
 source $(conda info --base)/etc/profile.d/conda.sh
-source activate manet_new_six|| { echo "Conda environment not found"; exit 1; }
+source activate openmmlab|| { echo "Conda environment not found"; exit 1; }
 
 # Display python version and path
 python --version
