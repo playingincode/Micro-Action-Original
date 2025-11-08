@@ -116,4 +116,4 @@ total_epochs = 15
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timesformer_divST_8x32x1_15e_kinetics400_rgb'
+work_dir = './work_dirs/timnesformer_for_mpii_frontal_final'
