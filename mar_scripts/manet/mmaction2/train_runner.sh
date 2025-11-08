@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p gpu='YES' and host='nefgpu46.inria.fr'
 #OAR -l /nodes=1/gpunum=1,walltime=72:00:00
-#OAR --name I3d_MPIIGroupInteraction_final_again
+#OAR --name I3d_Social_geesture_final_again
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 

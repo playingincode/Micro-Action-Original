@@ -2,12 +2,13 @@ _base_ = ['./i3d_r50_32x2x1_100e_kinetics400_rgb.py']
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
-data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
-data_root_test = '/data/stars/share/MPIIGroupInteraction/clips/val/'
-ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
-ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
-ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/SocialGesture/videos'
+data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/SocialGesture/videos'
+data_root_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/SocialGesture/videos'
+ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/train_labels_for_Social_gestures.txt'
+ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/test_labels_for_Social_gestures.txt'
+ann_file_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/test_labels_for_Social_gestures.txt'
+
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_bgr=False)
 train_pipeline = [
@@ -81,4 +82,4 @@ data = dict(
         pipeline=test_pipeline))
 
 # runtime settings
-work_dir = './work_dirs/I3d_MPIIGroupInteraction_final_again/'
+work_dir = './work_dirs/I3d_Social_gesture_final_again/'
