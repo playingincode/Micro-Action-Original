@@ -529,7 +529,7 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.tree_loss(cls_score_main,cls_score, labels_coarse,labels)
+        loss_cls=self.loss_cls(cls_score,labels)
         loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
         loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor

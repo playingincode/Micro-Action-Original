@@ -4,13 +4,21 @@ _base_ = [
 ]
 
 # dataset settings
+# dataset_type = 'VideoDataset'
+# data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
+# data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+# data_root_test = '/data/stars/share/MPIIGroupInteraction/clips/val/'
+# ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
+# ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+# ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+
 dataset_type = 'VideoDataset'
-data_root = '/data/stars/share/MPIIGroupInteraction/clips/train/'
-data_root_val = '/data/stars/share/MPIIGroupInteraction/clips/val/'
-data_root_test = '/data/stars/share/MPIIGroupInteraction/clips/val/'
-ann_file_train = '/data/stars/user/npoddar/train_list_videos_mpII.txt'
-ann_file_val = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
-ann_file_test = '/data/stars/user/npoddar/val_list_videos_mpII.txt'
+data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/train'
+data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/val'
+data_root_test= '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MPIIGroupInteraction/clips/val'
+ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/train_list_videos_mpII.txt'
+ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/val_list_videos_mpII.txt'
+ann_file_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/val_list_videos_mpII.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53],
@@ -100,4 +108,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea_without_manet'
+work_dir = './work_dirs/all_experts_with_mpii_our_model_with_pcan_idea_without_manet_without_pcan_frontal_fianl'
