@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel30
+#OAR -p esterel38
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name unique_experts_with_videomae_question_cross_attn_cross_entropy_removing_lower_limb_expert
+#OAR --name unique_experts_with_videomae_question_cross_attn_cross_entropy_removing_upper_limb_expert_again
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
@@ -29,4 +29,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic
+python -u tools/train.py configs/recognition/manet/manet.py --seed=0 --deterministic --resume-from  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_removing_upper_limb_expert/best_top1_acc_epoch_52.pth
