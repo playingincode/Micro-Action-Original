@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel35
+#OAR -p esterel40
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name I3d_MPIIGroupInteraction_frontal_final
+#OAR --name I3d_MPIIGroupInteraction_frontal_final_testing
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
