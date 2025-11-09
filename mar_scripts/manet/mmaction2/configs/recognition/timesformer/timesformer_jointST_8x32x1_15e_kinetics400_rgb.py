@@ -121,4 +121,4 @@ total_epochs = 500
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timnesformer_for_Social_gestures_final_corrected_num_classes'
+work_dir = './work_dirs/timnesformer_for_Social_gestures_final_corrected_num_classes_test'
