@@ -81,4 +81,4 @@ data = dict(
         pipeline=test_pipeline))
 
 # runtime settings
-work_dir = './work_dirs/I3d_MPIIGroupInteraction_frontal_final'
+work_dir = './work_dirs/I3d_MPIIGroupInteraction_frontal_final_test'

@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/test.py configs/recognition/i3d/my_i3d_r50_video_32x2x1_100e_micro_action_rgb.py "" --out online_evaulation/i3d_for_mpii_frontal.pickle
+python -u tools/test.py configs/recognition/i3d/my_i3d_r50_video_32x2x1_100e_micro_action_rgb.py "/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/I3d_MPIIGroupInteraction_frontal_final/best_top1_acc_epoch_57.pth" --out online_evaulation/i3d_for_mpii_frontal.pickle
