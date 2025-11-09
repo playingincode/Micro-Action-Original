@@ -82,4 +82,4 @@ data = dict(
         pipeline=test_pipeline))
 
 # runtime settings
-work_dir = './work_dirs/I3d_Social_gesture_final_again/'
+work_dir = './work_dirs/I3d_Social_gesture_final_again_testing/'
