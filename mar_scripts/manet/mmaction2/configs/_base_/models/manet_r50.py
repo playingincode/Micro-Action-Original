@@ -178,7 +178,7 @@ model = dict(
     type='MultiBranchModel',
     main_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_ALL_BODY_EXPERT/best_top1_acc_epoch_14.pth',
+        pretrained='',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -187,7 +187,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours_returns_cls_loss',
-            num_classes=4,
+            num_classes=2,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -199,7 +199,7 @@ model = dict(
     ),
     body_head_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_ALL_BODY_EXPERT/best_top1_acc_epoch_14.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/experts/first_class_expert_running_for_Social_gesture/best_top1_acc_epoch_5.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -208,7 +208,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=4,
+            num_classes=2,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),
@@ -220,7 +220,7 @@ model = dict(
     ),
     upper_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/weights_expert/SocialGesture_ALL_BODY_EXPERT/best_top1_acc_epoch_14.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/experts/second_class_expert_running_for_Social_gesture/best_top1_acc_epoch_34.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -229,7 +229,7 @@ model = dict(
             shift_div=8),
         cls_head=dict(
             type='MANetHead_ours',
-            num_classes=4,
+            num_classes=2,
             in_channels=1408,
             spatial_type='avg',
             consensus=dict(type='AvgConsensus', dim=1),

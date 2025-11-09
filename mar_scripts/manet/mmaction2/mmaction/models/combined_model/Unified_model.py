@@ -14,19 +14,19 @@ import numpy as np
 def fine2coarse(x):
     # if x <= 4:
     #     return 0
-    label_first_expert = [0, 1, 2, 3, 10, 13]
-    label_second_expert=[4,5,6]
-    label_third_expert=[8,9,16]
-    label_fourth_expert=[7,11,12,14,15,17,18]
+    label_first_expert = [0, 1]
+    label_second_expert=[2,3]
+    # label_third_expert=[8,9,16]
+    # label_fourth_expert=[7,11,12,14,15,17,18]
     
     if x in label_first_expert:
         return 0
     elif x in label_second_expert:
         return 1
-    elif x in label_third_expert:
-        return 2
-    elif x in label_fourth_expert:
-        return 3
+    # elif x in label_third_expert:
+    #     return 2
+    # elif x in label_fourth_expert:
+    #     return 3
     
 class CrossAttention(nn.Module):
     def __init__(self, d_model=1408, d_k=32):
@@ -62,11 +62,11 @@ class TreeLoss(nn.Module):
         self.stateSpace = self.generateStateSpace().cuda()
         self.sig = nn.Sigmoid()
 
-    def forward(self, pred_coarse,pred_fine, labels_coarse,labels_fine):
+    def forward(self, pred_coarse,pred_fine,labels_fine):
         pred_coarse=self.sig(pred_coarse)
         pred_fine=self.sig(pred_fine)
         pred_fusion=torch.cat((pred_coarse,pred_fine),dim=1)
-        labels_fine=labels_fine+4
+        labels_fine=labels_fine+2
         index = torch.mm(self.stateSpace.to(torch.float32), pred_fusion.T)
         joint = torch.exp(index)
         z = torch.sum(joint, dim=0)
@@ -77,11 +77,11 @@ class TreeLoss(nn.Module):
         return torch.mean(loss)
     
     def generateStateSpace(self):
-        stat_list = np.eye(23)
-        for i in range(4, 23):
+        stat_list = np.eye(6)
+        for i in range(2, 6):
             temp=stat_list[i]
             index=np.where(temp>0)[0]
-            coarse=fine2coarse(int(index)-4)
+            coarse=fine2coarse(int(index)-2)
             stat_list[i][coarse]=1 
         stateSpace = torch.tensor(stat_list)
         return stateSpace
@@ -161,10 +161,10 @@ class MultiBranchModel(nn.Module):
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
-        checkpoint = torch.load(main_model.pretrained, map_location='cpu')
+        # checkpoint = torch.load(main_model.pretrained, map_location='cpu')
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
-        self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
+        # self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
         load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
         load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
         load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
@@ -251,10 +251,10 @@ class MultiBranchModel(nn.Module):
         out_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
-        out_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
-        # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
-        # print(out_lower_limb)
-        out_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
+        # # print(out_lower_limb)
+        # out_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         # out_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
@@ -346,8 +346,8 @@ class MultiBranchModel(nn.Module):
         expert_outputs_stacked = torch.stack([
             out_body_head,
             out_upper_limb,
-            out_lower_limb,
-            out_body_hand,
+            # out_lower_limb,
+            # out_body_hand,
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -494,7 +494,7 @@ class MultiBranchModel(nn.Module):
         return full
 
 
-    def loss(self, cls_score, emb_score,labels,embs_la, cls_score_main,**kwargs):
+    def loss(self, cls_score,labels,cls_score_main,**kwargs):
         """Calculate the loss given output ``cls_score``, target ``labels``.
 
         Args:
@@ -529,9 +529,9 @@ class MultiBranchModel(nn.Module):
 
         # loss_cls = self.loss_cls(cls_score, labels, **kwargs)
         labels_coarse=None
-        loss_cls=self.loss_cls(cls_score,labels)
-        loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
-        loss_cls+=loss_embd
+        loss_cls=self.tree_loss(cls_score_main,cls_score,labels)
+        # loss_embd=self.loss_emb(emb_score,embs_la,labels)*50
+        # loss_cls+=loss_embd
         # loss_cls may be dictionary or single tensor
         if isinstance(loss_cls, dict):
             losses.update(loss_cls)
@@ -634,10 +634,10 @@ class MultiBranchModel(nn.Module):
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
-        out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
-        # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
-        # print(out_lower_limb)
-        out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
+        # # print(out_lower_limb)
+        # out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         # out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
@@ -668,17 +668,17 @@ class MultiBranchModel(nn.Module):
         
         emb_score_0 = emb_score_body_head
         emb_score_1 = emb_score_upper_limb
-        emb_score_2 = emb_score_lower_limb
-        emb_score_3 = emb_score_body_hand
+        # emb_score_2 = emb_score_lower_limb
+        # emb_score_3 = emb_score_body_hand
         # emb_score_4 = emb_score_head_hand
         # emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
-        emb_scores = torch.stack([
-            emb_score_0,
-            emb_score_1,
-            emb_score_2,
-            emb_score_3,
-        ], dim=1)
+        # emb_scores = torch.stack([
+        #     emb_score_0,
+        #     emb_score_1,
+        #     emb_score_2,
+        #     emb_score_3,
+        # ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
         device = out_main.device
@@ -703,8 +703,8 @@ class MultiBranchModel(nn.Module):
         expert_outputs_stacked = torch.stack([
             out_body_head,
             out_upper_limb,
-            out_lower_limb,
-            out_body_hand,
+            # out_lower_limb,
+            # out_body_hand,
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -721,26 +721,26 @@ class MultiBranchModel(nn.Module):
         final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
 
 # 2. Predict class from logits
-        class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
-        predicted_class = class_probs.argmax(dim=1)       # [B]
+        # class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
+        # predicted_class = class_probs.argmax(dim=1)       # [B]
 
-        # 3. Map predicted class to expert
-        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
-        for expert_id, indices in enumerate(expert_class_indices):
-            class_to_expert_map[indices] = expert_id
+        # # 3. Map predicted class to expert
+        # class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        # for expert_id, indices in enumerate(expert_class_indices):
+        #     class_to_expert_map[indices] = expert_id
         gt_labels = label.squeeze()
-        responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
+        # responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
-        # 4. Extract correct embedding score from `emb_scores`
-        batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
-        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # # 4. Extract correct embedding score from `emb_scores`
+        # batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
+        # expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
 
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main, **kwargs)
+        loss_cls = self.loss(final_logits, gt_labels, cls_score_main,**kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 
@@ -827,10 +827,10 @@ class MultiBranchModel(nn.Module):
         out_upper_limb,emb_score_upper_limb = self.upper_limb_model(imgs, label,emb, videomae_features,**kwargs)
         # out_upper_limb=self.upper_limb_model_linear(out_upper_limb)
         # print(out_upper_limb)
-        out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
-        # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
-        # print(out_lower_limb)
-        out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
+        # out_lower_limb,emb_score_lower_limb = self.lower_limb_model(imgs, label,emb, videomae_features,**kwargs)
+        # # out_lower_limb=self.lower_limb_model_linear(out_lower_limb)
+        # # print(out_lower_limb)
+        # out_body_hand,emb_score_body_hand = self.body_hand_model(imgs, label,emb, videomae_features,**kwargs)
         # out_body_hand=self.body_hand_model_linear(out_body_hand)
         # print(out_body_hand)
         # out_head_hand,emb_score_head_hand= self.head_hand_model(imgs, label,emb, videomae_features,**kwargs)
@@ -861,17 +861,17 @@ class MultiBranchModel(nn.Module):
         
         emb_score_0 = emb_score_body_head
         emb_score_1 = emb_score_upper_limb
-        emb_score_2 = emb_score_lower_limb
-        emb_score_3 = emb_score_body_hand
+        # emb_score_2 = emb_score_lower_limb
+        # emb_score_3 = emb_score_body_hand
         # emb_score_4 = emb_score_head_hand
         # emb_score_5 = emb_score_leg_hand
         # print(out_leg_hand)
-        emb_scores = torch.stack([
-            emb_score_0,
-            emb_score_1,
-            emb_score_2,
-            emb_score_3,
-        ], dim=1)
+        # emb_scores = torch.stack([
+        #     emb_score_0,
+        #     emb_score_1,
+        #     emb_score_2,
+        #     emb_score_3,
+        # ], dim=1)
         # weights = F.softmax(out_main, dim=1) 
         gate_weights = torch.softmax(out_main, dim=1)
         device = out_main.device
@@ -896,8 +896,8 @@ class MultiBranchModel(nn.Module):
         expert_outputs_stacked = torch.stack([
             out_body_head,
             out_upper_limb,
-            out_lower_limb,
-            out_body_hand,
+            # out_lower_limb,
+            # out_body_hand,
         ], dim=1)  # each is [B, 52], 6, D]
         # weights = weights.unsqueeze(-1)
         # expert_outputs_stacked = torch.stack(expert_outputs, dim=1)
@@ -915,25 +915,25 @@ class MultiBranchModel(nn.Module):
 
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
-        predicted_class = class_probs.argmax(dim=1)       # [B]
+        # predicted_class = class_probs.argmax(dim=1)       # [B]
 
         # 3. Map predicted class to expert
-        class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
-        for expert_id, indices in enumerate(expert_class_indices):
-            class_to_expert_map[indices] = expert_id
+        # class_to_expert_map = torch.zeros(52, dtype=torch.long, device=predicted_class.device)
+        # for expert_id, indices in enumerate(expert_class_indices):
+        #     class_to_expert_map[indices] = expert_id
         gt_labels = label.squeeze()
-        responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
+        # responsible_expert_idx = class_to_expert_map[gt_labels]  # [B]
 
-        # 4. Extract correct embedding score from `emb_scores`
-        batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
-        expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
+        # # 4. Extract correct embedding score from `emb_scores`
+        # batch_indices = torch.arange(gt_labels.shape[0], device=gt_labels.device)
+        # expert_embedding_score = emb_scores[batch_indices, responsible_expert_idx]   # [B]
 
         # Loss
         loss = dict()
         
 
         # Note: `final_emb_score` is not defined — assume you're using `expert_embedding_score`
-        loss_cls = self.loss(final_logits, expert_embedding_score, gt_labels, emb,cls_score_main, **kwargs)
+        loss_cls = self.loss(final_logits, gt_labels,cls_score_main, **kwargs)
         loss.update(loss_cls)
         loss, log_vars = self._parse_losses(loss)
 

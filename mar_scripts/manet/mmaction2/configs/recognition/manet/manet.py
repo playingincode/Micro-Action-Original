@@ -99,4 +99,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/all_experts_with_Social_Gesture_without_manet_without_pcan_loss_old_experts'
+work_dir = './work_dirs/all_experts_with_Social_Gesture_without_manet_with_pcan_loss_two_experts_again_final'
