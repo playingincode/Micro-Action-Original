@@ -116,9 +116,9 @@ optimizer = dict(
     nesterov=True)  # this lr is used for 8 gpus
 optimizer_config = dict(grad_clip=dict(max_norm=40, norm_type=2))
 # learning policy
-lr_config = dict(policy='step', step=[5, 10])
+lr_config = dict(policy='step', step=[30, 60])
 total_epochs = 500
 
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/timnesformer_for_mpii_frontal_final_testing'
+work_dir = './work_dirs/timnesformer_for_mpii_frontal_final_testing_running_test'

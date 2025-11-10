@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p esterel36
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name timnesformer_for_mpii_frontal_final_testing
+#OAR --name timnesformer_for_mpii_frontal_final_testing_test
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/train.py configs/recognition/timesformer/timesformer_jointST_8x32x1_15e_kinetics400_rgb.py --seed=0 --deterministic
+python -u tools/test.py configs/recognition/timesformer/timesformer_jointST_8x32x1_15e_kinetics400_rgb.py /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/timnesformer_for_mpii_frontal_final_testing/best_top1_acc_epoch_9.pth --out online_evaluation/timesformer_on_mpii_frontal_testing_test.pickle
