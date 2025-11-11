@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel30
+#OAR -p esterel36
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name unique_experts_with_videomae_question_cross_attn_cross_entropy_MPII_test
+#OAR --name unique_experts_with_videomae_question_cross_attn_without_face_expert_testing
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
@@ -28,4 +28,4 @@ export PATH=/pytorch_env/bin:$PATH
 
 export CUBLAS_WORKSPACE_CONFIG=:4096:8
 
-python -u tools/test.py configs/recognition/manet/manet.py  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_MPII_FRONTAL_final_retry/best_top1_acc_epoch_54.pth --out online_evaluation/unique_experts_with_videomae_cross_attention_MPII_frontal_checking_results.pickle
+python -u tools/test.py configs/recognition/manet/manet.py  /srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_MPII_without_face_final/best_top1_acc_epoch_35.pth --out online_evaluation/unique_experts_checking_for_MPII_without_lower_limb.pickle
