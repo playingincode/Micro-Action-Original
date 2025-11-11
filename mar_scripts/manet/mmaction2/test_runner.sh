@@ -1,0 +1,32 @@
+#!/bin/bash
+#OAR -p gpu='YES' and host='nefgpu46.inria.fr'
+#OAR -l /nodes=1/gpunum=1,walltime=72:00:00
+#OAR --name all_experts_with_all_ours_with_pcan_idea_implemented_gpu_46
+#OAR --stdout nef_logs/%jobname%.%jobid%.out
+#OAR --stderr nef_logs/%jobname%.%jobid%.err
+
+
+
+module load conda/2020.48-python3.8 cuda/12.2 gcc/9.2.0
+source ~/.bashrc
+
+# Activate conda environment
+source $(conda info --base)/etc/profile.d/conda.sh
+source activate openmmlab|| { echo "Conda environment not found"; exit 1; }
+
+# Display python version and path
+python --version
+which python
+
+# Add to PATH
+export PATH="/home/npoddar/:$PATH"
+
+# Run ffmpeg and nvidia-smi to check availability
+ffmpeg
+nvidia-smi || { echo "NVIDIA driver issue"; exit 1; }
+
+export PATH=/pytorch_env/bin:$PATH
+
+export CUBLAS_WORKSPACE_CONFIG=:4096:8
+
+python -u tools/test.py configs/recognition/manet/manet.py "" --out online_evaluation/checking_all_model.pickle

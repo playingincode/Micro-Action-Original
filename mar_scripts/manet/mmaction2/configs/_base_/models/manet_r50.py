@@ -178,7 +178,7 @@ model = dict(
     type='MultiBranchModel',
     main_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_six_classes_our_model/best_top1_acc_epoch_32.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_six_classes_our_model/best_top1_acc_epoch_32.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -199,7 +199,7 @@ model = dict(
     ),
     body_head_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_body_passive/best_top1_acc_epoch_31.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_body_passive/best_top1_acc_epoch_31.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -220,7 +220,7 @@ model = dict(
     ),
     upper_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_upper_limb_passive/best_top1_acc_epoch_39.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_upper_limb_passive/best_top1_acc_epoch_39.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -241,7 +241,7 @@ model = dict(
     ),
     lower_limb_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_lower_limb_passive/best_top1_acc_epoch_57.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/MANET_original_six_classes/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_lower_limb_passive/best_top1_acc_epoch_57.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
@@ -261,7 +261,7 @@ model = dict(
         test_cfg=dict(average_clips='prob')
     ),
     body_hand_model=dict(
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_body_hand_passive/best_top1_acc_epoch_11.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_body_hand_passive/best_top1_acc_epoch_11.pth',
         type='Recognizer2D_ours',
         backbone=dict(
             type='ResNetTSM',
@@ -283,7 +283,7 @@ model = dict(
     ),
     head_hand_model=dict(
         type='Recognizer2D_ours',
-        pretrained='/data/stars/user/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_hand_passive/best_top1_acc_epoch_7.pth',
+        pretrained='/srv/storage/stars@storage3.sophia.grid5000.fr/npoddar/Micro-Action/mar_scripts/manet/mmaction2/work_dirs/manet_prova_sgp_head_hand_passive/best_top1_acc_epoch_7.pth',
         backbone=dict(
             type='ResNetTSM',
             pretrained='torchvision://resnet50',
