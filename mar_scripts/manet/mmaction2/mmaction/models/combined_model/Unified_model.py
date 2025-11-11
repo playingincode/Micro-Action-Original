@@ -165,7 +165,7 @@ class MultiBranchModel(nn.Module):
         # print(check)
         # print("Top-level keys in checkpoint:", checkpoint.keys())
         # self.main_model.load_state_dict(checkpoint["state_dict"], strict=True)
-        load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.body_head_model, body_head_model.pretrained, map_location='cpu')
         load_checkpoint(self.upper_limb_model, upper_limb_model.pretrained, map_location='cpu')
         load_checkpoint(self.lower_limb_model, lower_limb_model.pretrained, map_location='cpu')
         load_checkpoint(self.body_hand_model, body_hand_model.pretrained, map_location='cpu')

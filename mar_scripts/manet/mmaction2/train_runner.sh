@@ -1,7 +1,7 @@
 #!/bin/bash
-#OAR -p esterel40
+#OAR -p esterel30
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name all_experts_with_Social_Gesture_without_manet_with_pcan_loss_two_experts_again_final
+#OAR --name all_experts_with_Social_Gesture_without_manet_with_pcan_loss_with_lower_lr_without_first_weight
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
