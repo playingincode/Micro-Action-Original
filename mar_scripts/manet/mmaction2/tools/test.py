@@ -19,6 +19,16 @@ from mmaction.utils import (build_ddp, build_dp, default_device,
                             register_module_hooks, setup_multi_processes)
 from sklearn.metrics import f1_score, accuracy_score
 import pickle
+from thop import profile, clever_format
+
+class WrapperModel(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, x):
+        # x is the dictionary from data_loader
+        return self.model(**x, return_loss=False)
 
 # TODO import test functions from mmcv and delete them from mmaction2
 try:
@@ -155,6 +165,49 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     # build the model and load checkpoint
     model = build_model(
         cfg.model, train_cfg=None, test_cfg=cfg.get('test_cfg'))
+    
+    model = model.cuda()
+    model.eval()
+    
+
+# Calculate FLOPs and Params
+    # model = model.cuda().eval()
+
+    # ---------------------------------------------
+    # ⚙️ Use 0th batch from data_loader as input
+    # ---------------------------------------------
+    # Get one batch safely
+    # first_batch = next(iter(data_loader))
+
+    # Different datasets return tuples, so handle both cases
+    # if isinstance(first_batch, (list, tuple)):
+    #     input_tensor = first_batch[0]  # usually (inputs, labels, ...)
+    # else:
+    #     input_tensor = first_batch
+    # print(input_tensor)
+
+    # Ensure the tensor is on GPU
+    # input_tensor = input_tensor.cuda(non_blocking=True)
+
+    # ---------------------------------------------
+    # 🧮 Calculate FLOPs and parameter count
+    # ---------------------------------------------
+    model.return_loss = False
+    wrapped_model = WrapperModel(model).cuda().eval()
+
+# Get one real batch from data_loader
+    data_batch = next(iter(data_loader))
+    data_batch = {k: v.cuda() for k, v in data_batch.items() if isinstance(v, torch.Tensor)}
+
+    # Compute FLOPs
+    with torch.no_grad():
+        flops, params = profile(wrapped_model, inputs=(data_batch,), verbose=False)
+        flops, params = clever_format([flops, params], "%.3f")
+
+    print(f"GFLOPs: {flops}")
+    print(f"Params: {params}")
+    return
+
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)

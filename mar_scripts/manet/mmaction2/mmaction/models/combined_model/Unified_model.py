@@ -104,7 +104,7 @@ class CrossAttentionWithTransformer(nn.Module):
      
         self.classifier = nn.Linear(d_model, 52)
 
-    def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
+    def forward(self, gate_weights, expert_outputs, B=10, T=8):
         """
         gate_weights: [B*T, 1408]
         expert_outputs: [B*T, 6, 1408]
@@ -119,8 +119,8 @@ class CrossAttentionWithTransformer(nn.Module):
 
         # Step 2: Reshape to [B, T, 1408]
         x = x.view(B, T, -1)  # [B, T, 1408]
-        out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        # out_manet_model=out_manet_model.view(B,T,-1)
+        # x=x+out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
@@ -160,7 +160,7 @@ class MultiBranchModel(nn.Module):
         self.body_model = build_model(body_model)
         # self.head_hand_model = build_model(head_hand_model)
         # self.leg_hand_model = build_model(leg_hand_model)
-        self.manet_52_model=build_model(manet_52_model)
+        # self.manet_52_model=build_model(manet_52_model)
         # print("Main model pretrained",main_model.pretrained)
         # load_checkpoint(self.main_model, main_model.pretrained, map_location='cpu',strict=False)
         # torch
@@ -175,7 +175,7 @@ class MultiBranchModel(nn.Module):
         
         # load_checkpoint(self.head_hand_model, head_hand_model.pretrained, map_location='cpu')
         # load_checkpoint(self.leg_hand_model, leg_hand_model.pretrained, map_location='cpu')
-        load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
+        # load_checkpoint(self.manet_52_model, manet_52_model.pretrained, map_location='cpu')
         #  super().__init__()
         self.num_classes = num_classes
         self.in_channels = 1408
@@ -189,10 +189,10 @@ class MultiBranchModel(nn.Module):
         self.lower_limb_model_linear=nn.Linear(512,1408)
         self.scale_manet_52_features=nn.Linear(2048,1408)
         
-        for param in self.manet_52_model.parameters():
-            param.requires_grad = False
+        # for param in self.manet_52_model.parameters():
+        #     param.requires_grad = False
         
-        self.manet_52_model.eval()
+        # self.manet_52_model.eval()
         self.tree_loss=TreeLoss()
         # for param in self.body_head_model.parameters():
         #     param.requires_grad = False
@@ -271,8 +271,8 @@ class MultiBranchModel(nn.Module):
         # # out_head_hand=self.head_hand_model_linear(out_head_hand)
         # # print(out_head_hand)
         # out_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
-        out_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features_tensor,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features_tensor,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         # out_leg_hand=self.leg_hand_model_linear(out_leg_hand)
         
@@ -333,7 +333,7 @@ class MultiBranchModel(nn.Module):
         T=imgs.shape[1]
         whole_body_features_sequeezed = whole_body_features_tensor.squeeze(2).flatten(0, 1)
         gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)
         # final_emb_score = torch.sum(gate_weights.unsqueeze(-1) * emb_scores, dim=1)
         # gt_labels = label.squeeze()
         # loss=dict()
@@ -535,8 +535,8 @@ class MultiBranchModel(nn.Module):
         # # print(out_head_hand)
         # out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
-        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
         
@@ -608,7 +608,7 @@ class MultiBranchModel(nn.Module):
         T=imgs.shape[1]
         whole_body_features_sequeezed = whole_body_features.squeeze(2).flatten(0, 1)
         gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
         
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
@@ -735,8 +735,8 @@ class MultiBranchModel(nn.Module):
         # # print(out_head_hand)
         # out_leg_hand ,emb_score_leg_hand= self.leg_hand_model(imgs, label,emb, videomae_features,**kwargs)
         
-        out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features,**kwargs)
-        out_manet_model=self.scale_manet_52_features(out_manet_model)
+        # out_manet_model,emb_score_manet_model=self.manet_52_model(imgs, label,emb, whole_body_features,**kwargs)
+        # out_manet_model=self.scale_manet_52_features(out_manet_model)
         
         
         
@@ -809,7 +809,7 @@ class MultiBranchModel(nn.Module):
         # gate_weights=torch.softmax(whole_body_features, dim=1)
         whole_body_features_sequeezed = whole_body_features.squeeze(2).flatten(0, 1)
         gate_weights=torch.softmax(whole_body_features_sequeezed, dim=1)
-        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,out_manet_model,B,T)  # [B, 52]
+        final_logits = self.cross_attention_with_transformer(gate_weights, expert_outputs_stacked,B,T)  # [B, 52]
         
 # 2. Predict class from logits
         class_probs = torch.softmax(final_logits, dim=1)  # [B, 52]
