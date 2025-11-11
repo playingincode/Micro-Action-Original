@@ -368,10 +368,15 @@ class BaseDataset(Dataset, metaclass=ABCMeta):
         npy_path = os.path.splitext(complete_path_videomaev2_features)[0] + '.npy'
         
         whole_body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/MULTIMEDIA_CONFERANCE_2025/features_ma52_RGB/",relative_path)
-        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_face_RGB_MA_52/",relative_path)
-        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_body_RGB_MA_52/",relative_path)
-        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_lower_limb_RGB_MA_52/",relative_path)
-        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_upper_limb_RGB_MA_52/",relative_path)
+        # face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_face_RGB_MA_52/",relative_path)
+        # body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_body_RGB_MA_52/",relative_path)
+        # lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_lower_limb_RGB_MA_52/",relative_path)
+        # upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/Features_upper_limb_RGB_MA_52/",relative_path)
+        face_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/features_test_ma52/test_face_ma_52/",relative_path)
+        body_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/features_test_ma52/test_body_ma_52/",relative_path)
+        lower_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/features_test_ma52/test_lower_limb_ma_52/",relative_path)
+        upper_limb_features=os.path.join("/srv/storage/stars@storage3.sophia.grid5000.fr/areka/areka/CVPR/features_test_ma52/test_upper_limb_ma_52/",relative_path)
+
         # print("Video mae v2",complete_path_videomaev2_features)
         whole_body_npy_path=os.path.splitext(whole_body_features)[0] + '.npy'
         face_npy_path = os.path.splitext(face_features)[0] + '.npy'
