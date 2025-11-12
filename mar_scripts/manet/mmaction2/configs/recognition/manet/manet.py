@@ -88,8 +88,8 @@ data = dict(
         pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=ann_file_test,
-        data_prefix=data_root_test,
+        ann_file=ann_file_val,
+        data_prefix=data_root_val,
         pipeline=test_pipeline))
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
