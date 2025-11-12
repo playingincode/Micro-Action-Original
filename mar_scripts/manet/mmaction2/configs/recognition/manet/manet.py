@@ -5,12 +5,12 @@ _base_ = [
 
 # dataset settings
 dataset_type = 'VideoDataset'
-data_root = '/data/stars/share/MA_52/train'
-data_root_val = '/data/stars/share/MA_52/val/'
-data_root_test = '/data/stars/share/MA_52/val/'
-ann_file_train = '/data/stars/share/MA_52/annotations/annotations_train_list_videos.txt'
-ann_file_val = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
-ann_file_test = '/data/stars/share/MA_52/annotations/annotations_val_list_videos.txt'
+data_root = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/train'
+data_root_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/val/'
+data_root_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/val/'
+ann_file_train = '/srv/storage/stars@storage3.sophia.grid5000.fr/share//MA_52/annotations/annotations_train_list_videos.txt'
+ann_file_val = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/annotations/annotations_val_list_videos.txt'
+ann_file_test = '/srv/storage/stars@storage3.sophia.grid5000.fr/share/MA_52/annotations/annotations_val_list_videos.txt'
 
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53],
@@ -88,8 +88,8 @@ data = dict(
         pipeline=val_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=ann_file_test,
-        data_prefix=data_root_test,
+        ann_file=ann_file_val,
+        data_prefix=data_root_val,
         pipeline=test_pipeline))
 evaluation = dict(
     interval=1, metrics=['top_k_accuracy', 'mean_class_accuracy'])
@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=5)
-work_dir = './work_dirs/manet_plain_running'
+work_dir = './work_dirs/manet_plain_running_testing_parameters'
