@@ -19,7 +19,9 @@ from mmaction.utils import (build_ddp, build_dp, default_device,
                             register_module_hooks, setup_multi_processes)
 from sklearn.metrics import f1_score, accuracy_score
 import pickle
-
+from tqdm import tqdm
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
 # TODO import test functions from mmcv and delete them from mmaction2
 try:
     from mmcv.engine import multi_gpu_test, single_gpu_test
@@ -155,6 +157,66 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     # build the model and load checkpoint
     model = build_model(
         cfg.model, train_cfg=None, test_cfg=cfg.get('test_cfg'))
+    model.cuda().eval()
+    
+    
+    all_outputs = []
+    all_embeddings = []
+    all_labels = []
+    load_checkpoint(model, args.checkpoint, map_location='cpu')
+
+    print("Running inference loop...")
+    with torch.no_grad():
+        for i, data in enumerate(tqdm(data_loader, desc="Inference", total=len(data_loader))):
+            # Each `data` is usually a dict like {'imgs': tensor, 'label': tensor, ...}
+            # if isinstance(data, dict):
+            #     data = {k: v.to(device) if torch.is_tensor(v) else v for k, v in data.items()}
+            device='cuda:0'
+            if isinstance(data, dict):
+                data = {k: v.to(device, non_blocking=True) if torch.is_tensor(v) else v
+                        for k, v in data.items()}
+
+        # Forward pass — return_loss=False gives prediction scores
+        # result = model(return_loss=False, **data)
+
+
+            # Forward pass — return_loss=False gives prediction scores
+            result = model(return_loss=False, **data)
+
+            # If you modified your model to support return_features=True
+            # embeddings = model(return_loss=False, return_features=True, **data)
+            # embeddings = None  # placeholder if not available
+
+            # all_outputs.append(result)
+            if 'label' in data:
+                # print("hello")
+                all_labels.append(data['label'].cpu().numpy())
+            if result is not None:
+                # print("hi")
+                # print(result.shape)
+                all_embeddings.append(result)
+
+            # if (i + 1) % 10 == 0:
+            #     print(f"Processed batch {i+1}/{len(data_loader)}")
+
+    # stack results
+    # all_outputs = np.concatenate([np.array(x) for x in all_outputs], axis=0)
+    all_labels = np.concatenate(all_labels, axis=0) if len(all_labels) > 0 else None
+    all_embeddings = np.concatenate(all_embeddings, axis=0) if len(all_embeddings) > 0 else None
+    
+    if all_embeddings is not None and all_labels is not None:
+        print("Entering this loop")
+   
+
+        tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+        features_2d = tsne.fit_transform(all_embeddings)
+
+        plt.figure(figsize=(10, 8))
+        scatter = plt.scatter(features_2d[:, 0], features_2d[:, 1], c=all_labels, cmap='tab20', s=8, alpha=0.7)
+        plt.colorbar(scatter)
+        plt.title('t-SNE of B-MOE Embeddings')
+        plt.savefig('tsne_plot_B-MOE.png')
+        plt.close()
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
@@ -162,7 +224,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     fp16_cfg = cfg.get('fp16', None)
     if fp16_cfg is not None:
         wrap_fp16_model(model)
-    load_checkpoint(model, args.checkpoint, map_location='cpu')
+    
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)

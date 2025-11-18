@@ -130,7 +130,7 @@ class CrossAttentionWithTransformer(nn.Module):
        
         # Step 5: Final classification
         logits = self.classifier(x)  # [B, 52]
-        return logits
+        return x
 
     
 @MULTIMODAL.register_module()
