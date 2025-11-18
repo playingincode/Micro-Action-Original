@@ -19,6 +19,12 @@ from mmaction.utils import (build_ddp, build_dp, default_device,
                             register_module_hooks, setup_multi_processes)
 from sklearn.metrics import f1_score, accuracy_score
 import pickle
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib.colors import ListedColormap
+from sklearn.manifold import TSNE
+from tqdm import tqdm
+
 
 # TODO import test functions from mmcv and delete them from mmaction2
 try:
@@ -156,6 +162,115 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     # build the model and load checkpoint
     model = build_model(
         cfg.model, train_cfg=None, test_cfg=cfg.get('test_cfg'))
+    model.cuda().eval()
+    
+    
+    all_outputs = []
+    all_embeddings = []
+    all_labels = []
+    load_checkpoint(model, args.checkpoint, map_location='cpu')
+
+    print("Running inference loop...")
+    with torch.no_grad():
+        for i, data in enumerate(tqdm(data_loader, desc="Inference", total=len(data_loader))):
+            # Each `data` is usually a dict like {'imgs': tensor, 'label': tensor, ...}
+            # if isinstance(data, dict):
+            #     data = {k: v.to(device) if torch.is_tensor(v) else v for k, v in data.items()}
+            device='cuda:0'
+            if isinstance(data, dict):
+                data = {k: v.to(device, non_blocking=True) if torch.is_tensor(v) else v
+                        for k, v in data.items()}
+
+        # Forward pass — return_loss=False gives prediction scores
+        # result = model(return_loss=False, **data)
+
+
+            # Forward pass — return_loss=False gives prediction scores
+            result = model(return_loss=False, **data)
+
+            # If you modified your model to support return_features=True
+            # embeddings = model(return_loss=False, return_features=True, **data)
+            # embeddings = None  # placeholder if not available
+
+            # all_outputs.append(result)
+            if 'label' in data:
+                # print("hello")
+                all_labels.append(data['label'].cpu().numpy())
+            if result is not None:
+                # print("hi")
+                # print(result.shape)
+                all_embeddings.append(result)
+
+            # if (i + 1) % 10 == 0:
+            #     print(f"Processed batch {i+1}/{len(data_loader)}")
+
+    # stack results
+    # all_outputs = np.concatenate([np.array(x) for x in all_outputs], axis=0)
+    # all_labels = np.concatenate(all_labels, axis=0) if len(all_labels) > 0 else None
+    # all_embeddings = np.concatenate(all_embeddings, axis=0) if len(all_embeddings) > 0 else None
+    # model = build_model(
+    #     cfg.model, train_cfg=None, test_cfg=cfg.get('test_cfg'))
+    if all_embeddings is not None and all_labels is not None:
+        print("Entering this loop")
+
+        # Fit t-SNE
+        tsne = TSNE(n_components=2, perplexity=30, n_iter=1000, random_state=42)
+        import numpy as np
+        all_embeddings = np.array(all_embeddings).squeeze()
+        all_labels = [int(l) if not isinstance(l, np.ndarray) else int(l[0]) for l in all_labels]
+        features_2d = tsne.fit_transform(all_embeddings)
+
+        # Get unique sorted classes
+        unique_labels = sorted(set(all_labels))
+        num_classes = len(unique_labels)
+
+        # Create a discrete color map: one color per class
+        base_cmap = plt.cm.get_cmap('tab20', num_classes)   # discrete colormap
+        cmap = ListedColormap(base_cmap(np.arange(num_classes)))
+
+        # Map class values to index 0..num_classes-1
+        label_to_idx = {label: idx for idx, label in enumerate(unique_labels)}
+        class_indices = np.array([label_to_idx[l] for l in all_labels])
+
+        # Scatter plot with discrete colors
+        plt.figure(figsize=(10, 8))
+        scatter = plt.scatter(
+            features_2d[:, 0],
+            features_2d[:, 1],
+            c=class_indices,
+            cmap=cmap,
+            s=8,
+            alpha=0.7
+        )
+
+        # Colorbar with ticks for each class
+        cbar = plt.colorbar(scatter, ticks=np.arange(num_classes))
+        cbar.ax.set_yticklabels(unique_labels)
+        plt.title('t-SNE of B-MOE Embeddings')
+
+        # ---- Legend every 4 labels ----
+        sampled_labels = unique_labels[::4]   # take every 4th class
+        handles = []
+
+        for lbl in sampled_labels:
+            idx = label_to_idx[lbl]
+            color = cmap(idx)
+            handles.append(
+                plt.Line2D(
+                    [], [], marker='o', color=color, linestyle='',
+                    markersize=6, label=str(lbl)
+                )
+            )
+
+        plt.legend(
+            handles=handles,
+            title="Labels (every 4)",
+            loc='upper right',
+            fontsize=8
+        )
+
+        plt.savefig('tsne_plot_B-MOE_MPII.png')
+        plt.close()
 
     if len(cfg.module_hooks) > 0:
         register_module_hooks(model, cfg.module_hooks)
@@ -164,6 +279,10 @@ def inference_pytorch(args, cfg, distributed, data_loader):
     if fp16_cfg is not None:
         wrap_fp16_model(model)
     load_checkpoint(model, args.checkpoint, map_location='cpu')
+    
+      
+    
+    
 
     if args.fuse_conv_bn:
         model = fuse_conv_bn(model)
