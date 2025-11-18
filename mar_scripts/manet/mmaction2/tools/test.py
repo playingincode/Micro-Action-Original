@@ -148,6 +148,7 @@ def inference_pytorch(args, cfg, distributed, data_loader):
                 cfg.model.test_cfg.average_clips = args.average_clips
             else:
                 cfg.test_cfg.average_clips = args.average_clips
+    
 
     # remove redundant pretrain steps for testing
     # turn_off_pretrained(cfg.model)
