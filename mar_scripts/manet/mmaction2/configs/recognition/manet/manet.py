@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/manet_for_mpII_with_frontal_final'
+work_dir = './work_dirs/manet_for_mpII_with_frontal_final_tsne'
