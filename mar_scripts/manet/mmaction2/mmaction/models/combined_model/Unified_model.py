@@ -104,30 +104,28 @@ class CrossAttentionWithTransformer(nn.Module):
      
         self.classifier = nn.Linear(d_model, 52)
 
-    def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
+    def forward(self, gate_weights, expert_outputs, out_manet_model, B=10, T=8):
         """
-        gate_weights: [B*T, 1408]
+        gate_weights: [B*T, 1408]      (unused in averaging)
         expert_outputs: [B*T, 6, 1408]
         """
-        # Step 1: Cross-attention per time step
-        # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
-        # gate_weights=torch.softmax(out_manet_model, dim=1)
-        x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
-        # print("After cross attention",x.shape)
-        # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
-        # fused=out_manet_model+
+
+        # Step 1: Average over experts
+        x = expert_outputs.mean(dim=1)  # [B*T, 1408]
 
         # Step 2: Reshape to [B, T, 1408]
-        x = x.view(B, T, -1)  # [B, T, 1408]
-        out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        x = x.view(B, T, -1)
+        out_manet_model = out_manet_model.view(B, T, -1)
+
+        # Residual fusion with MANet output
+        x = x + out_manet_model
 
         # Step 3: Temporal modeling
         x = self.transformer(x)  # [B, T, 1408]
 
-        # Step 4: Temporal pooling (mean pooling)
+        # Step 4: Temporal pooling
         x = x.mean(dim=1)  # [B, 1408]
-       
+
         # Step 5: Final classification
         logits = self.classifier(x)  # [B, 52]
         return logits
