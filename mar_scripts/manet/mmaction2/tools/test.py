@@ -21,6 +21,14 @@ from sklearn.metrics import f1_score, accuracy_score
 import pickle
 from thop import profile, clever_format
 
+class WrapperModel(torch.nn.Module):
+    def __init__(self, model):
+        super().__init__()
+        self.model = model
+
+    def forward(self, x):
+        # x is the dictionary from data_loader
+        return self.model(**x, return_loss=False)
 # TODO import test functions from mmcv and delete them from mmaction2
 try:
     from mmcv.engine import multi_gpu_test, single_gpu_test
