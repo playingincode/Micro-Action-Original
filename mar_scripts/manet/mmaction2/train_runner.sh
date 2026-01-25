@@ -1,7 +1,7 @@
 #!/bin/bash
 #OAR -p esterel37
 #OAR -l host=1/gpu=1,walltime=72:00:00
-#OAR --name unique_experts_with_videomae_question_cross_attn_cross_entropy_without_pretraining_experts_final
+#OAR --name unique_experts_with_videomae_concatenation_cross_entropy_final
 #OAR --stdout nef_logs/%jobname%.%jobid%.out
 #OAR --stderr nef_logs/%jobname%.%jobid%.err
 
