@@ -100,4 +100,4 @@ optimizer = dict(
 )
 # runtime settings
 checkpoint_config = dict(interval=1)
-work_dir = './work_dirs/unique_experts_with_videomae_question_cross_attn_cross_entropy_Social_Gesture_final'
+work_dir = './work_dirs/unique_experts_with_videomae_concatenation_cross_entropy_Social_Gesture_final'
