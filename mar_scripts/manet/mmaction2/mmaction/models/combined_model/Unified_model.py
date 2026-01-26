@@ -103,33 +103,34 @@ class CrossAttentionWithTransformer(nn.Module):
         self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
      
         self.classifier = nn.Linear(d_model, 19)
-
-    def forward(self, gate_weights, expert_outputs,out_manet_model, B=10, T=8):
+        self.expert_proj = nn.Linear(4 * 1408, 1408)
+    def forward(self, gate_weights, expert_outputs, out_manet_model, B=10, T=8):
         """
-        gate_weights: [B*T, 1408]
         expert_outputs: [B*T, 6, 1408]
+        out_manet_model: [B*T, 1408]
         """
-        # Step 1: Cross-attention per time step
-        # print("Gate weights",gate_weights.shape,"Expert outputs",expert_outputs.shape)
-        # gate_weights=torch.softmax(out_manet_model, dim=1)
-        x = self.cross_attn(gate_weights, expert_outputs)  # [B*T, 1408]
-        # print("After cross attention",x.shape)
-        # fused = torch.cat([x.mean(dim=1), out_manet_model], dim=1)
-        # fused=out_manet_model+
 
-        # Step 2: Reshape to [B, T, 1408]
-        x = x.view(B, T, -1)  # [B, T, 1408]
-        out_manet_model=out_manet_model.view(B,T,-1)
-        x=x+out_manet_model
+        # Reshape
+        expert_outputs = expert_outputs.view(B, T, 4, -1)     # [B, T, 6, 1408]
+        out_manet_model = out_manet_model.view(B, T, -1)      # [B, T, 1408]
 
-        # Step 3: Temporal modeling
-        x = self.transformer(x)  # [B, T, 1408]
+        # Concatenate experts along feature dimension
+        expert_cat = expert_outputs.reshape(B, T, -1)        # [B, T, 8448]
 
-        # Step 4: Temporal pooling (mean pooling)
-        x = x.mean(dim=1)  # [B, 1408]
-       
-        # Step 5: Final classification
-        logits = self.classifier(x)  # [B, 52]
+        # Project concatenated experts to 1408
+        expert_feat = self.expert_proj(expert_cat)            # [B, T, 1408]
+
+        # Residual add with MANet
+        x = out_manet_model + expert_feat                     # [B, T, 1408]
+
+        # Temporal modeling
+        x = self.transformer(x)                               # [B, T, 1408]
+
+        # Temporal pooling
+        x = x.mean(dim=1)                                     # [B, 1408]
+
+        # Classification
+        logits = self.classifier(x)                           # [B, 52]
         return logits
 
     
