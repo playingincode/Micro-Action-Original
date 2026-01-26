@@ -9,7 +9,7 @@ import zipfile
 import csv
 import numpy as np
 
-pickle_file_path = 'online_evaluation/test_result_manet.pickle'
+pickle_file_path = 'online_evaluation/unique_experts_with_videomae_concatenation_cross_entropy_ma52_final_cvpr.pickle'
 pred_file_path = 'online_evaluation/prediction.csv'
 zip_file_path = 'online_evaluation/submission.zip'
 
